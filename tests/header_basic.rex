@@ -21,4 +21,10 @@ say "Header now is:" hn~string
 say "Header hex is:" hn~string~c2x
 say "Wire string is:" hn~wirestring
 say "Hex Wire string:" hn~wirestring~c2x
+--
+h2b = .header~new("keyb", "valueb")
+say "First compare:" hn~equals(h2b)
+h2c = .header~new("keyc", "valuec")
+say "Second compare:" hn~equals(h2c)
+--
 ::requires "../lib/header.cls"

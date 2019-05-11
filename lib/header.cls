@@ -38,3 +38,11 @@
 --
 ::method wirestring public
     return self~string || .string~nl
+--
+::method equals public
+    expose key value
+    use strict arg other
+    --
+    if \other~isA(.header) then return .false
+    --
+    return key == other~key & value == other~value
