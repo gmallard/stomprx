@@ -27,4 +27,8 @@ say "First compare:" hn~equals(h2b)
 h2c = .header~new("keyc", "valuec")
 say "Second compare:" hn~equals(h2c)
 --
+h2bcl = h2b~clone
+say "Compare B to clone:" h2b~equals(h2bcl)
+say "Compare C to clone:" h2c~equals(h2bcl)
+
 ::requires "../lib/header.cls"

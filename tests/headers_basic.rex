@@ -23,6 +23,10 @@
     call hallvalues
     say
     call hmth
+    say
+    call hclone
+    say
+    call hcomp
     exit
 
 --
@@ -83,6 +87,33 @@
     hl = .headers~new
     say "MT Headers:" hl~wirestring
     say "MT Headers Hex:" hl~wirestring~c2x
+
+--
+::routine hclone
+    hl = .headers~new
+    ha = .header~new("KA", "VA")
+    hb = .header~new("KB", "VB")
+    hc = .header~new("KC", "VC")
+    hl~add(ha); hl~add(hb); hl~add(hc)
+    hl~pp("Clone Header Start:")
+    hlcl = hl~clone
+    hlcl~pp("Cloned Header Object:")
+    --
+    say "Compare is:" hl~equals(hlcl)
+
+--
+::routine hcomp
+    hl = .headers~new
+    ha = .header~new("KA", "VA")
+    hb = .header~new("KB", "VB")
+    hc = .header~new("KC", "VC")
+    hl~add(ha); hl~add(hb); hl~add(hc)
+    hl2 = .headers~new
+    ha = .header~new("KA", "VA")
+    hb = .header~new("KB2", "VB")
+    hc = .header~new("KC", "VC")
+    hl2~add(ha); hl2~add(hb); hl2~add(hc)
+    say "Compare (F) is:" hl~equals(hl2)
 
 ::requires "../lib/header.cls"
 ::requires "../lib/headers.cls"

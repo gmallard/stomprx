@@ -31,13 +31,16 @@
     --
     key = k
     value = v
+
 --
 ::method string public
     expose key value
     return key":"value
+
 --
 ::method wirestring public
     return self~string || .string~nl
+
 --
 ::method equals public
     expose key value
@@ -46,3 +49,12 @@
     if \other~isA(.header) then return .false
     --
     return key == other~key & value == other~value
+
+--
+::method clone public
+    expose key value
+    nh = .header~new("","")
+    nh~key = key
+    nh~value = value
+    return nh
+

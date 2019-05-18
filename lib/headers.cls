@@ -91,5 +91,29 @@
         say "Key->"hn~key", Value->"hn~value
     end
 
+--
+::method equals public
+    expose hl
+    use strict arg other
+    --
+    if \other~isA(.headers) then return .false
+    --
+    do hn over hl~allItems()
+        ov = other~value(hn~key)
+        -- key not found?
+        if  ov == .nil then return .false
+        -- check values are equal
+        if ov \= hn~value then return .false
+    end
+    return .true
+
+--
+::method clone public
+    expose hl
+    nhd = .headers~new
+    do hn over hl~allItems
+        nhd~add(hn)
+    end
+    return nhd
 
 ::requires "header.cls"
