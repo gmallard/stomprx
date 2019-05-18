@@ -60,5 +60,5 @@
     return ssock
 --
 
-::requires "../strutls.rex"
+::requires "../lib/strutls.rex"
 ::requires 'streamsocket.cls'
