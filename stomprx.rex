@@ -14,15 +14,7 @@
  limitations under the License.
 */
 
-call tisfile
-
-exit
-
--- /////////////////////////////////////////////////////////////////////////////
-
-::routine tisfile
-    f = "/bin/ls"
-    rv = .strutls~isFile(f)
-    say "rv is:" rv
-
-::requires "../lib/strutls.rex"
+::requires "netconn/netconn.cls"
+::requires "lib/strutls.rex"
+::requires "lib/header.cls"
+::requires "lib/headers.cls"

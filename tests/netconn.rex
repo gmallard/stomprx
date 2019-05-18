@@ -27,4 +27,4 @@ if asock~close() \= 'READY:'
 then say 'SockClose2 Failed' asock~description
 
 --
-::requires "../netconn/netconn.cls"
+::requires "../stomprx.rex"
