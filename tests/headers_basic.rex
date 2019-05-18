@@ -21,6 +21,8 @@
     call hvalue
     say
     call hallvalues
+    say
+    call hmth
     exit
 
 --
@@ -75,6 +77,12 @@
     do nv over vbx~allItems
         say "Next Value:" nv
     end
+
+--
+::routine hmth
+    hl = .headers~new
+    say "MT Headers:" hl~wirestring
+    say "MT Headers Hex:" hl~wirestring~c2x
 
 ::requires "../lib/header.cls"
 ::requires "../lib/headers.cls"
