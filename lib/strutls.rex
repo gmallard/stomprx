@@ -26,3 +26,69 @@
         return .false
     else
         return .true
+
+-- ///////////////////////////////////////////////////////////////////////////
+::class encdec
+
+--
+::method init
+    expose edl
+    x = .edlist~new
+    edl = x~list
+
+--
+::method enc
+    expose edl
+    use strict arg ind
+    oe = ind
+    do x over edl~allItems
+        oe = oe~changeStr(x~decoded, x~encoded)
+    end
+    return oe
+
+--
+::method dec
+    expose edl
+    use strict arg ine
+    od = ine
+    do x over edl~allItems
+        od = od~changeStr(x~encoded, x~decoded)
+    end
+    return od
+
+-- ///////////////////////////////////////////////////////////////////////////
+::class edlist
+
+--
+::method init
+    expose edl
+    edl = .list~new
+    edl~append(.edelt~new("\\", "\"))
+    edl~append(.edelt~new("\n", .string~nl))
+    edl~append(.edelt~new("\r", "0d"~x2c))
+    edl~append(.edelt~new("\c", ":"))
+
+--
+::method list
+    expose edl
+    return edl
+
+-- ///////////////////////////////////////////////////////////////////////////
+::class edelt
+
+--
+::method init
+    expose encoded decoded
+    use strict arg enc,dec
+    encoded = enc
+    decoded = dec
+
+--
+::method encoded
+    expose encoded
+    return encoded
+
+--
+::method decoded
+    expose decoded
+    return decoded
