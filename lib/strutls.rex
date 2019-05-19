@@ -28,16 +28,16 @@
         return .true
 
 -- ///////////////////////////////////////////////////////////////////////////
-::class encdec
+::class encdec public
 
 --
-::method init
+::method init public
     expose edl
     x = .edlist~new
     edl = x~list
 
 --
-::method enc
+::method enc public
     expose edl
     use strict arg ind
     oe = ind
@@ -47,7 +47,7 @@
     return oe
 
 --
-::method dec
+::method dec public
     expose edl
     use strict arg ine
     od = ine
@@ -56,11 +56,20 @@
     end
     return od
 
+--
+::method pp public
+    expose edl
+    use strict arg t
+    say t
+    --
+    do ne over edl~allItems
+        ne~pp("Next E/D Pair:")
+    end
 -- ///////////////////////////////////////////////////////////////////////////
-::class edlist
+::class edlist public
 
 --
-::method init
+::method init public
     expose edl
     edl = .list~new
     edl~append(.edelt~new("\\", "\"))
@@ -69,26 +78,33 @@
     edl~append(.edelt~new("\c", ":"))
 
 --
-::method list
+::method list public
     expose edl
     return edl
 
 -- ///////////////////////////////////////////////////////////////////////////
-::class edelt
+::class edelt public
 
 --
-::method init
+::method init public
     expose encoded decoded
     use strict arg enc,dec
     encoded = enc
     decoded = dec
 
 --
-::method encoded
+::method encoded public
     expose encoded
     return encoded
 
 --
-::method decoded
+::method decoded public
     expose decoded
     return decoded
+
+--
+::method pp public
+    expose encoded decoded
+    use strict arg t
+    say t
+    say "Encoded->"encoded", Decoded->"decoded
