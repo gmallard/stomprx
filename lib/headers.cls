@@ -116,4 +116,21 @@
     end
     return nhd
 
+--
+::method encode public
+    expose hl
+    use strict arg edl
+    do hn over hl~allItems
+        hn~key = edl~enc(hn~key)
+        hn~value = edl~enc(hn~value)
+    end
+--
+::method decode public
+    expose hl
+    use strict arg edl
+    do hn over hl~allItems
+        hn~key = edl~dec(hn~key)
+        hn~value = edl~dec(hn~value)
+    end
+
 ::requires "header.cls"
