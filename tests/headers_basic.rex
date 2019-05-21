@@ -31,6 +31,8 @@
     call hsetval
     say
     call hsetkey
+    say
+    call hconnhdrs
     exit
 
 --
@@ -140,6 +142,15 @@
     hl~pp("hsetkey start:")
     hl~setkey("KA", "NEWKA")
     hl~pp("hsetkey after set:")
+
+--
+::routine hconnhdrs
+    h10 = .headers~connhdr10
+    h10~pp("1.0 connect headers:")
+    h11 = .headers~connhdr11
+    h11~pp("1.1 connect headers:")
+    h12 = .headers~connhdr12
+    h12~pp("1.2 connect headers:")
 
 ::requires "../lib/header.cls"
 ::requires "../lib/headers.cls"

@@ -26,6 +26,37 @@
     hl = .list~new
 --
 --
+::method connhdr10 public class
+    h10 = .headers~new
+    hl = .header~new("login", "guest")
+    hp = .header~new("passcode", "guest")
+    hv = .header~new("accept-version", "1.0")
+    hh = .header~new("host", "localhost")
+    h10~add(hl); h10~add(hp); h10~add(hv); h10~add(hh)
+    return h10
+
+--
+::method connhdr11 public class
+    h11 = .headers~new
+    hl = .header~new("login", "guest")
+    hp = .header~new("passcode", "guest")
+    hv = .header~new("accept-version", "1.1")
+    hh = .header~new("host", "localhost")
+    hhb = .header~new("heart-beat", "0,0")
+    h11~add(hl); h11~add(hp); h11~add(hv); h11~add(hh); h11~add(hhb)
+    return h11
+--
+::method connhdr12 public class
+    h12 = .headers~new
+    hl = .header~new("login", "guest")
+    hp = .header~new("passcode", "guest")
+    hv = .header~new("accept-version", "1.2")
+    hh = .header~new("host", "localhost")
+    hhb = .header~new("heart-beat", "0,0")
+    h12~add(hl); h12~add(hp); h12~add(hv); h12~add(hh); h12~add(hhb)
+    return h12
+
+--
 ::method add public
     expose hl
     use strict arg other
