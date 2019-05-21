@@ -133,4 +133,28 @@
         hn~value = edl~dec(hn~value)
     end
 
+--
+::method setvalue public
+    expose hl
+    use strict arg k,nv
+    do hn over hl~allItems
+        if k == hn~key then do
+            hn~value = nv
+            return .true
+        end
+    end
+    return .false
+
+--
+::method setkey public
+    expose hl
+    use strict arg k,nk
+    do hn over hl~allItems
+        if k == hn~key then do
+            hn~key = nk
+            return .true
+        end
+    end
+    return .false
+
 ::requires "header.cls"

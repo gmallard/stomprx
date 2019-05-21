@@ -27,6 +27,10 @@
     call hclone
     say
     call hcomp
+    say
+    call hsetval
+    say
+    call hsetkey
     exit
 
 --
@@ -114,6 +118,28 @@
     hc = .header~new("KC", "VC")
     hl2~add(ha); hl2~add(hb); hl2~add(hc)
     say "Compare (F) is:" hl~equals(hl2)
+
+--
+::routine hsetval
+    hl = .headers~new
+    ha = .header~new("KA", "VA")
+    hb = .header~new("KB", "VB")
+    hc = .header~new("KC", "VC")
+    hl~add(ha); hl~add(hb); hl~add(hc)
+    hl~pp("hsetval start:")
+    hl~setvalue("KA", "NEWVA")
+    hl~pp("hsetval after set:")
+
+--
+::routine hsetkey
+    hl = .headers~new
+    ha = .header~new("KA", "VA")
+    hb = .header~new("KB", "VB")
+    hc = .header~new("KC", "VC")
+    hl~add(ha); hl~add(hb); hl~add(hc)
+    hl~pp("hsetkey start:")
+    hl~setkey("KA", "NEWKA")
+    hl~pp("hsetkey after set:")
 
 ::requires "../lib/header.cls"
 ::requires "../lib/headers.cls"
