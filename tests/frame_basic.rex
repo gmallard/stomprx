@@ -13,9 +13,33 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+say "hi"
 
-::requires "netconn/netconn.cls"
-::requires "lib/strutls.rex"
-::requires "lib/frame.cls"
-::requires "lib/header.cls"
-::requires "lib/headers.cls"
+h10 = .headers~connhdr10
+f = .frame~new("CONNECT", h10, "")
+say "frame wirestring:"
+say f~wirestring
+say
+say f~wirestring~c2x
+say
+h11 = .headers~connhdr11
+f = .frame~new("CONNECT", h11, "")
+say "frame wirestring:"
+say f~wirestring
+say
+say f~wirestring~c2x
+say
+h12 = .headers~connhdr12
+f = .frame~new("CONNECT", h12, "")
+say "frame wirestring:"
+say f~wirestring
+say
+say f~wirestring~c2x
+--
+say
+f~pp("pp of 1.2 frame")
+
+say;say "bye"
+exit
+--
+::requires "../stomprx.rex"
