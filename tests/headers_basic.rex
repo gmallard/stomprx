@@ -33,6 +33,8 @@
     call hsetkey
     say
     call hconnhdrs
+    say
+    call hisa
     exit
 
 --
@@ -151,6 +153,11 @@
     h11~pp("1.1 connect headers:")
     h12 = .headers~connhdr12
     h12~pp("1.2 connect headers:")
+
+--
+::routine hisa
+    h = .headers~new
+    say "is a 1" h~isA(.headers)
 
 ::requires "../lib/header.cls"
 ::requires "../lib/headers.cls"
