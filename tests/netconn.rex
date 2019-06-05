@@ -17,14 +17,20 @@
 -- Test defaults
 asock = .netconn~open(.nil)
 say "Sock is:" asock
-if asock~close() \= 'READY:'
-then say 'SockClose1 Failed' asock~description
+
+if SockClose(asock) < 0 then do
+    say 'SockClose failed 1:' errno
+    exit
+end
 
 -- Test override from properties file
 asock = .netconn~open("tnetc.properties")
 say "Sock is:" asock
-if asock~close() \= 'READY:'
-then say 'SockClose2 Failed' asock~description
+
+if SockClose(asock) < 0 then do
+    say 'SockClose failed 2:' errno
+    exit
+end
 
 --
 ::requires "../stomprx.rex"

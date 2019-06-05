@@ -24,8 +24,8 @@
     use strict arg propfile
 
     -- Defaults
-    host = "localhost"
-    port = '61613'
+    ahost = "127.0.0.1"
+    aport = '61613'
 
     -- Overrides from properties file
     if propfile \= .nil then do
@@ -33,32 +33,41 @@
             mp = .properties~load(propfile)
             th = mp~getProperty("host", "")
             if th \= "" then
-                host = th
+                ahost = th
             tp = mp~getProperty("port", "")
             if tp \= "" then
-                port = tp
+                aport = tp
         end
     end
 
     -- Overrides from the environment
     x = value("STOMP_HOST",,"ENVIRONMENT")
     if x \= "" then
-        host = x
+        ahost = x
     x = value("STOMP_PORT",,"ENVIRONMENT")
     if x \= "" then
-        port = x
+        aport = x
 
     --
-    ssock = .streamsocket~new(host, port)
-    ret = ssock~open
-    if ret \= 'READY:'
-    then do
-        say 'Connection Failed:' ret
-        return "ERROR: connect failed:" ret
+    /*  create a socket  */
+    socket = SockSocket('AF_INET', 'SOCK_STREAM', 'IPPROTO_TCP')
+
+    /*  specify the host we will connect to  */
+    host.!family = 'AF_INET'
+    host.!addr = ahost
+    host.!port = aport
+
+    say "host:" ahost
+    say "port:" aport
+
+    /*  connect to the server  */
+    if SockConnect(socket, 'host.!') < 0 then do
+        say 'SockConnect failed:' errno
+        return .nil
     end
     --
-    return ssock
+    return socket
 --
 
 ::requires "../lib/strutls.rex"
-::requires 'streamsocket.cls'
+::requires 'rxsock' LIBRARY
