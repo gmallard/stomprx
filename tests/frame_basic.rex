@@ -39,6 +39,27 @@ say f~wirestring~c2x
 say
 f~pp("pp of 1.2 frame")
 
+-- fromstring
+ts = "SEND".string~nl
+ts = ts || "keya:val1".string~nl
+ts = ts || "keyb:val2".string~nl
+ts = ts || "keyc:val3".string~nl
+ts = ts || .string~nl
+ts = ts || "Data in body"
+ts = ts || "00"~x2c
+ffs = .frame~fromstring(ts)
+ffs~pp("Test From String:")
+
+ts = "SEND".string~nl
+ts = ts || "keya:val1".string~nl
+ts = ts || "keyb:val2".string~nl
+ts = ts || "keyc:val3".string~nl
+ts = ts || .string~nl
+-- no body
+ts = ts || "00"~x2c
+ffs = .frame~fromstring(ts)
+ffs~pp("Test From String No Body:")
+
 say;say "bye"
 exit
 --

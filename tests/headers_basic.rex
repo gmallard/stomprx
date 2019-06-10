@@ -35,6 +35,8 @@
     call hconnhdrs
     say
     call hisa
+    say
+    call hfromstr
     exit
 
 --
@@ -158,6 +160,14 @@
 ::routine hisa
     h = .headers~new
     say "is a 1" h~isA(.headers)
+
+--
+::routine hfromstr
+    ts = "keya:val1".string~nl
+    ts = ts || "keyb:val2".string~nl
+    ts = ts || "keyc:val3"
+    hdrs = .headers~fromstring(ts)
+    hdrs~pp("Test From String")
 
 ::requires "../lib/header.cls"
 ::requires "../lib/headers.cls"

@@ -33,6 +33,19 @@
     command = c
     hdrs = h
     body = b
+    --
+
+::method fromstring public class
+    use strict arg ins
+    --
+    nl = .string~nl
+    dnl = nl || nl
+    x00 = "00"~x2c
+    --
+    parse var ins f (nl) hs (dnl) b (x00) .
+    hdrs = .headers~fromstring(hs)
+    fr = .frame~new(f, hdrs, b)
+    return fr
 
 ::method wirestring public
     expose command hdrs body
@@ -56,3 +69,5 @@
     say "Body:"
     if body == "" then say "(empty)"
     else say body
+
+::requires "headers.cls"

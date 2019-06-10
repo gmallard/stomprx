@@ -55,6 +55,17 @@
     hhb = .header~new("heart-beat", "0,0")
     h12~add(hl); h12~add(hp); h12~add(hv); h12~add(hh); h12~add(hhb)
     return h12
+--
+::method fromstring public class
+    use strict arg ins
+    h = .headers~new
+    ls = ins~makeArray()
+    do ln over ls~allItems
+        parse var ln k ":" v
+        hdr = .header~new(k, v)
+        if \h~add(hdr) then say "WARNING not a header"
+    end
+    return h
 
 --
 ::method add public
