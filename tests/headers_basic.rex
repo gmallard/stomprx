@@ -88,8 +88,10 @@
     vbx = hl~allvalues("KB")
     say "vbx isArray?:" vbx~isA(.array)
     say "vbx is:" vbx
-    do nv over vbx~allItems
-        say "Next Value:" nv
+    if vbx~isA(.array) then do
+        do nv over vbx~allItems
+            say "Next Value:" nv
+        end
     end
 
 --
@@ -169,5 +171,6 @@
     hdrs = .headers~fromstring(ts)
     hdrs~pp("Test From String")
 
-::requires "../lib/header.cls"
-::requires "../lib/headers.cls"
+::requires "../stomprx.rex"
+-- ::requires "../lib/header.cls"
+-- ::requires "../lib/headers.cls"

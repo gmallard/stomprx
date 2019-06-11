@@ -31,37 +31,23 @@
     expose edd socket connframe protocol session server
     use strict arg as, ch, od
     socket = as
-    if \ch~isA(.headers) then do
-        say "ch (parameter 2) must be a .headers instance"
-        return .nil
-    end
-    if \od~isA(.directory) then do
-        say "od (parameter 3) must be a .directory instance"
-        return .nil
-    end
     -- encode / decode data logic
     edd = .encdec~new
     --
     cf = .frame~new(.stc~CONNECT, ch, "")
     -- cf~pp("Connect Frame:")
-
     -- say "raw data:"
     -- say cf~wirestring~c2x
-
     -- Write the CONNECT frame
     bw = SockSend(socket, cf~wirestring)
-
-    -- say "Bytes written:" bw
-    
+    -- say "Bytes written:" bw    
     call SysSleep(0.1)
     retc = SockRecv(socket, 'rcf', 2048)
-
     -- say "Return Code:" retc
     -- say "Len Received:" rcf~length
     -- say "Data Received:"
     -- say rcf
     -- say "========================="
-
     connframe = .frame~fromstring(rcf)
     -- connframe~pp("Connection frame")
     if connframe~command == ERROR then
@@ -71,7 +57,6 @@
         -- say "vercon:|" .stc~HK_VERSION "|"
         -- ch = connframe~hdrs
         -- ch~pp("CONNECT Frame Headers:")
-
         protocol = connframe~hdrs~value(.stc~HK_VERSION)
         session = connframe~hdrs~value(.stc~HK_SESSION)
         server = connframe~hdrs~value(.stc~HK_SERVER)
@@ -79,7 +64,6 @@
     end
 
 ::requires 'rxsock' LIBRARY
-::requires "headers.cls"
-::requires "frame.cls"
 ::requires "strutls.rex"
 ::requires "stc.cls"
+::requires "frame.cls"

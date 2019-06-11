@@ -69,5 +69,5 @@
     return socket
 --
 
-::requires "../lib/strutls.rex"
+::requires "strutls.rex"
 ::requires 'rxsock' LIBRARY

@@ -14,10 +14,11 @@
  limitations under the License.
 */
 
-::requires "netconn/netconn.cls"
-::requires "lib/strutls.rex"
-::requires "lib/frame.cls"
+/* Watch this.  Order is important. */
+::requires "lib/stc.cls"
 ::requires "lib/header.cls"
 ::requires "lib/headers.cls"
-::requires "lib/stc.cls"
+::requires "lib/strutls.rex"
+::requires "lib/frame.cls"
+::requires "lib/netconn.cls"
 ::requires "lib/connection.cls"
