@@ -21,6 +21,7 @@
 -- Attributes
 --
 ::attribute edd get
+::attribute connframe get
 ::attribute protocol get
 ::attribute session get
 ::attribute server get
