@@ -2,7 +2,7 @@
  Copyright © 2019 Guy M. Allard
 
  Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
+ you may not use this file except in compliasockete with the License.
  You may obtain a copy of the License at
 
      http:www.apache.org/licenses/LICENSE-2.0
@@ -14,10 +14,8 @@
  limitations under the License.
 */
 
-::requires "netconn/netconn.cls"
-::requires "lib/strutls.rex"
-::requires "lib/frame.cls"
-::requires "lib/header.cls"
-::requires "lib/headers.cls"
-::requires "lib/stc.cls"
-::requires "lib/connection.cls"
+say "hi"
+say .stc~CONNECT
+say .stc~SPL_10
+
+::requires "../lib/stc.cls"

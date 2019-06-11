@@ -14,10 +14,16 @@
  limitations under the License.
 */
 
-::requires "netconn/netconn.cls"
-::requires "lib/strutls.rex"
-::requires "lib/frame.cls"
-::requires "lib/header.cls"
-::requires "lib/headers.cls"
-::requires "lib/stc.cls"
-::requires "lib/connection.cls"
+asock = .netconn~open(.nil)
+ch = .headers~connhdr10
+cod = .directory~new
+sc = .connection~new(asock, ch, cod)
+say "session:" sc~session
+say "server:" sc~server
+say "protocol:" sc~protocol
+--
+say "start close"
+retc = SockClose(asock)
+say "close return code:" retc
+--
+::requires "../stomprx.rex"

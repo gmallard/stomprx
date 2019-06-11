@@ -57,8 +57,8 @@
     host.!addr = ahost
     host.!port = aport
 
-    say "host:" ahost
-    say "port:" aport
+    -- say "host:" ahost
+    -- say "port:" aport
 
     /*  connect to the server  */
     if SockConnect(socket, 'host.!') < 0 then do
