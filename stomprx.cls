@@ -29,7 +29,9 @@
 -- CTOR
 --
 ::method init public
-    expose edd socket connframe protocol session server
+    expose edd socket connframe protocol session server,
+        wtrq errq rcptq msgq,
+        shutdown
     use strict arg as, ch, od
     socket = as
     -- encode / decode data logic
@@ -63,6 +65,59 @@
         server = connframe~hdrs~value(.stc~HK_SERVER)
         -- say "protocol:" protocol
     end
+    --
+    wtrq = .queue~new
+    errq = .queue~new
+    rcptq = .queue~new
+    msgq = .queue~new
+
+    -- start the writer
+    shutdown = .false
+    self~start("writer", 0.2)
+
+::method disconnect public
+    expose socket wtrq shutdown
+    use arg odh
+    --
+    if odh == "ODH" then
+        useh = .headers~new
+    else
+        useh = odh
+    --
+    df = .frame~new(.stc~DISCONNECT, useh, "")
+    in = wtrq~append(df) -- send frame to writer
+    call SysSleep 0.4
+    shutdown = .true
+    --
+    retc = SockClose(socket)
+    -- say "close return code:" retc
+    
+::method writer unguarded
+    expose socket wtrq shutdown
+    use strict arg wst
+    dbg = .false
+    if dbg then say "writer starts"
+    lc = 0
+    wfc = 0
+    do forever
+        lc = lc + 1 
+        -- say "writer start next loop" lc
+        if shutdown then leave
+        nxf = wtrq~pull
+        if nxf == .nil then do
+            -- say "writer sleeps"
+            call SysSleep wst
+            iterate
+        end
+        wfc = wfc + 1
+        nfd = nxf~wirestring
+        bw = SockSend(socket, nfd)
+        if dbg then do
+            say "frame number" wfc "sent" bw "bytes"
+        end
+    end
+    --
+    if dbg then say "writer ends"
 
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */

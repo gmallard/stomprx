@@ -22,8 +22,9 @@ say "session:" sc~session
 say "server:" sc~server
 say "protocol:" sc~protocol
 --
-say "start close"
-retc = SockClose(asock)
-say "close return code:" retc
+call SysSleep 1.0
+say "sleep done"
+sc~disconnect
+say "disconnect done"
 --
 ::requires "../stomprx.cls"

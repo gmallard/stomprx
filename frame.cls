@@ -50,6 +50,8 @@
 ::method wirestring public
     expose command hdrs body
     --
+    if command == .string~nl then return command
+    --
     fs = command || .string~nl
     fs = fs || hdrs~wirestring
     fs = fs || body || "00"~x2c
