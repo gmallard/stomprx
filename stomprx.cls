@@ -72,4 +72,3 @@
 ::requires "strutls.rex"
 ::requires "frame.cls"
 ::requires "netconn.cls"
-::requires "connection.cls"
