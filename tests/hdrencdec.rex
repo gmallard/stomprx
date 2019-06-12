@@ -29,4 +29,4 @@ exit
     return th
 
 --
-::requires "../stomprx.rex"
+::requires "../stomprx.cls"

@@ -65,6 +65,10 @@
     end
 
 ::requires 'rxsock' LIBRARY
-::requires "strutls.rex"
+/* Watch this.  Order is important. */
 ::requires "stc.cls"
+::requires "header.cls"
+::requires "headers.cls"
+::requires "strutls.rex"
 ::requires "frame.cls"
+::requires "netconn.cls"

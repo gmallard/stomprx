@@ -33,4 +33,4 @@ if SockClose(asock) < 0 then do
 end
 
 --
-::requires "../stomprx.rex"
+::requires "../stomprx.cls"

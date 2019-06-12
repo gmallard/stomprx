@@ -26,4 +26,4 @@ say "start close"
 retc = SockClose(asock)
 say "close return code:" retc
 --
-::requires "../stomprx.rex"
+::requires "../stomprx.cls"
