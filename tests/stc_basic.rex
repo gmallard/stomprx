@@ -18,4 +18,4 @@ say "hi"
 say .stc~CONNECT
 say .stc~SPL_10
 
-::requires "../lib/stc.cls"
+::requires "../stc.cls"
