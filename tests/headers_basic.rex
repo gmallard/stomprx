@@ -171,6 +171,4 @@
     hdrs = .headers~fromstring(ts)
     hdrs~pp("Test From String")
 
-::requires "../stomprx.rex"
--- ::requires "../lib/header.cls"
--- ::requires "../lib/headers.cls"
+::requires "../stomprx.cls"
