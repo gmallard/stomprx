@@ -24,7 +24,18 @@ say "protocol:" sc~protocol
 --
 call SysSleep 1.0
 say "sleep done"
-sc~disconnect
+--
+getr = .true
+if getr then do
+    dh = .headers~new
+    rc = .header~new(.stc~HK_RECEIPT, "test.receipt.id")
+    dh~add(rc)
+    sc~disconnect(dh)
+    rf = sc~recvrcpt(0.3)
+    rf~pp("RECEIPT Frame:")
+end
+else sc~disconnect
+
 say "disconnect done"
 --
 ::requires "../stomprx.cls"

@@ -31,7 +31,7 @@
 ::method init public
     expose edd socket connframe protocol session server,
         wtrq errq rcptq msgq,
-        shutdown
+        shutdown NL DNL X00
     use strict arg as, ch, od
     socket = as
     -- encode / decode data logic
@@ -70,10 +70,17 @@
     errq = .queue~new
     rcptq = .queue~new
     msgq = .queue~new
-
+    --
+    NL = .string~nl
+    DNL = .string~nl || .string~nl
+    X00 = "00"~x2c
+    --
     -- start the writer
     shutdown = .false
     self~start("writer", 0.2)
+
+    -- start the reader
+    self~start("reader", 0.2)
 
 ::method disconnect public
     expose socket wtrq shutdown
@@ -84,13 +91,14 @@
     else
         useh = odh
     --
+    dbg = .true
     df = .frame~new(.stc~DISCONNECT, useh, "")
     in = wtrq~append(df) -- send frame to writer
     call SysSleep 0.4
     shutdown = .true
     --
     retc = SockClose(socket)
-    -- say "close return code:" retc
+    if dbg then say "disconnect close return code:" retc
     
 ::method writer unguarded
     expose socket wtrq shutdown
@@ -118,6 +126,245 @@
     end
     --
     if dbg then say "writer ends"
+
+::method reader unguarded
+    expose socket shutdown errq rcptq msgq NL DNL X00
+    use strict arg rst
+    dbg = .true
+    if dbg then say "reader starts"
+    hbb = ""
+    --
+    -- The reader implementation is a state machine.
+    --
+    moredata = 0
+    nldrain = 1
+    findeoh = 2
+    accumbdy0 = 3
+    sendq = 4
+    getcmd = 5
+    accumbdyl = 6
+    --
+    command = ""
+    headers = ""
+    body = ""
+    fcl = .nil
+    --
+    state = moredata
+    resumest = nldrain
+    do forever
+        if shutdown then leave
+        select
+            --
+            when state == moredata then do
+                if dbg then say "state is moredata"
+                ret = SockRecv(socket, 'ldata', 1024)
+                if ret < 1 then do
+                    if ret < 0 then
+                        say 'SockRecv failed:' errno
+                    else
+                        say 'Socket closed:' errno
+                    leave
+                end
+                hbb = hbb || ldata
+                state = resumest
+                iterate
+            end
+            --
+            when state == nldrain then do
+                if dbg then say "state is nldrain"
+                do while hbb~subchar(1) == .string~nl
+                    if hbb~length == 1 then do
+                        hbb = ""
+                        leave
+                    end
+                    else hbb = hbb~substr(2)
+                end
+                if hbb~length == 0 then do
+                    state = moredata
+                    resumest = nldrain
+                    iterate
+                end
+                state = getcmd
+                iterate
+            end
+            --
+            when state == findeoh then do
+                if dbg then say "state is findeoh"
+                if hbb~subchar(1) == NL then do
+                    headers = .headers~new
+                    hbb = hbb~substr(2)
+                    if hbb~subchar(1) == X00 then do
+                        hbb = hbb~substr(2)
+                        body = ""
+                        state = sendq
+                        iterate
+                    end
+                    state = accumbdy0
+                    iterate
+                end
+                if hbb~pos(DNL) == 0 then do
+                    state = moredata
+                    resumest = findeoh
+                    iterate
+                end
+                parse var hbb hs (DNL) hbb
+                headers = .headers~fromstring(hs)
+                if hbb~subchar(1) == X00 then do
+                    hbb = hbb~substr(2)
+                    body = ""
+                    state = sendq
+                    iterate
+                end
+                fcl = headers~value(.stc~HK_CONTENT_LENGTH)
+                if fcl == .nil then do
+                    state = accumbdy0
+                    iterate
+                end
+                else do
+                    state = accumbdyl
+                    iterate
+                end
+            end
+            --
+            when state == accumbdy0 then do
+                if dbg then say "state is accumbdy0"
+                px0 = hbb~pos(.stc~X00)
+                if px0 > 0 then do
+                    body = hbb~substr(1,px0-1)
+                    hbb = hbb~substr(px0+1)
+                    state = sendq
+                    iterate
+                end
+                --
+                found = .false
+                do while \found
+                    ret = SockRecv(socket, 'ldata', 1024)
+                    if ret < 1 then do
+                        if ret < 0 then
+                            say 'SockRecv failed:' errno
+                        else
+                            say 'Socket closed:' errno
+                        leave
+                    end
+                    hbb = hbb || ldata
+                    if ldata~pos(.stc~X00) > 0 then found = .true
+                end
+                --
+                px0 = hbb~pos(X00)
+                body = hbb~substr(1,px0-1)
+                hbb = hbb~substr(px0+1)
+                state = sendq
+                iterate
+            end
+            --
+            when state == sendq then do
+                if dbg then say "state is sendq"
+                --
+                -- say "command:" command
+                -- headers~pp("parsed headers:")
+                -- say "bodyx:" body~c2x body~length()
+                -- leave
+                --
+                nf = .frame~new(command, headers, body)
+                if command == .stc~ERROR then errq~append(nf)
+                if command == .stc~RECEIPT then rcptq~append(nf)
+                if command == .stc~MESSAGE then msgq~append(nf)
+                --
+                command = ""
+                headers = ""
+                body = ""
+                fcl = .nil
+                --
+                state = nldrain
+                iterate
+            end
+            --
+            when state == getcmd then do
+                if dbg then say "state is getcmd"
+                if hbb~pos(NL) == 0 then do
+                    state = moredata
+                    resumest = getcmd
+                    iterate
+                end
+                parse var hbb command (NL) hbb
+                if hbb == "" then do
+                    state = moredata
+                    resumest = findeoh
+                    iterate
+                end
+                state = findeoh
+                iterate
+            end
+            --
+            when state == accumbdyl then do
+                if dbg then say "state is accumbdyl"
+                hbl = hbb~length
+                do while hbl < fcl
+                    ret = SockRecv(socket, 'ldata', 1024)
+                    if ret < 1 then do
+                        if ret < 0 then
+                            say 'SockRecv failed:' errno
+                        else
+                            say 'Socket closed:' errno
+                        leave
+                    end
+                    hbb = hbb || ldata
+                end
+                --
+                body = hbb~substr(1, fcl)
+                hbb = hbb~substr(fcl + 1)
+                state = sendq
+                iterate
+            end
+        end -- select
+    end -- forever do
+    --
+    if dbg then say "reader ends"
+--
+::method recverr
+    expose errq
+    use arg slt
+    --
+    if slt == "SLT" then do
+        tf = errq~pull
+        retrun tf
+    end
+    --
+    do forever
+        tf = errq~pull
+        if tf <>.nil then return tf
+        call SysSleep slt
+    end
+--
+::method recvrcpt
+    expose rcptq
+    use arg slt
+    --
+    if slt == "SLT" then do
+        tf = rcptq~pull
+        retrun tf
+    end
+    --
+    do forever
+        tf = rcptq~pull
+        if tf <>.nil then return tf
+        call SysSleep slt
+    end
+--
+::method recvmsg
+    expose msgq
+    use arg slt
+    --
+    if slt == "SLT" then do
+        tf = msgq~pull
+        retrun tf
+    end
+    --
+    do forever
+        tf = msgq~pull
+        if tf <>.nil then return tf
+        call SysSleep slt
+    end
 
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */

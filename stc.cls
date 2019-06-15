@@ -63,3 +63,5 @@
 ::constant 	HK_TRANSACTION     "transaction"
 ::constant 	HK_VERSION         "version"
 ::constant 	HK_VHOST           "host"
+
+/* Misc. */
