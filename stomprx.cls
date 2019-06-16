@@ -332,7 +332,7 @@
     --
     do forever
         tf = errq~pull
-        if tf <>.nil then return tf
+        if tf <> .nil then return tf
         call SysSleep slt
     end
 --
@@ -347,7 +347,7 @@
     --
     do forever
         tf = rcptq~pull
-        if tf <>.nil then return tf
+        if tf <> .nil then return tf
         call SysSleep slt
     end
 --
@@ -362,7 +362,7 @@
     --
     do forever
         tf = msgq~pull
-        if tf <>.nil then return tf
+        if tf <> .nil then return tf
         call SysSleep slt
     end
 
