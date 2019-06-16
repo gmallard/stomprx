@@ -434,6 +434,7 @@
 
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */
+::requires "uuid.cls"
 ::requires "stc.cls"
 ::requires "header.cls"
 ::requires "headers.cls"
