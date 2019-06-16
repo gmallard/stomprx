@@ -31,7 +31,9 @@
 ::method init public
     expose edd socket connframe protocol session server,
         wtrq errq rcptq msgq,
-        shutdown NL DNL X00
+        shutdown NL DNL X00,
+        discdbg rdrdbg wtrdbg,
+        rdrslt wtrslt
     use strict arg as, ch, od
     socket = as
     -- encode / decode data logic
@@ -66,24 +68,17 @@
         -- say "protocol:" protocol
     end
     --
-    wtrq = .queue~new
-    errq = .queue~new
-    rcptq = .queue~new
-    msgq = .queue~new
-    --
-    NL = .string~nl
-    DNL = .string~nl || .string~nl
-    X00 = "00"~x2c
-    --
+    self~loadopts(od)
     -- start the writer
     shutdown = .false
-    self~start("writer", 0.2)
-
+    -- say "XDBG starting writer" wtrslt
+    self~start("writer", wtrslt)
+    -- say "XDBG done starting writer" wtrslt
     -- start the reader
-    self~start("reader", 0.2)
+    self~start("reader", rdrslt)
 
 ::method disconnect public
-    expose socket wtrq shutdown
+    expose socket wtrq shutdown discdbg
     use arg odh
     --
     if odh == "ODH" then
@@ -91,20 +86,20 @@
     else
         useh = odh
     --
-    dbg = .true
+    discdbg = .true
     df = .frame~new(.stc~DISCONNECT, useh, "")
     in = wtrq~append(df) -- send frame to writer
     call SysSleep 0.4
     shutdown = .true
     --
     retc = SockClose(socket)
-    if dbg then say "disconnect close return code:" retc
+    if discdbg then say "disconnect close return code:" retc
     
 ::method writer unguarded
-    expose socket wtrq shutdown
+    expose socket wtrq shutdown wtrdbg
     use strict arg wst
-    dbg = .false
-    if dbg then say "writer starts"
+    -- say "XDBG wtr starts" wtrdbg wst
+    if wtrdbg then say "writer starts"
     lc = 0
     wfc = 0
     do forever
@@ -120,18 +115,17 @@
         wfc = wfc + 1
         nfd = nxf~wirestring
         bw = SockSend(socket, nfd)
-        if dbg then do
+        if wtrdbg then do
             say "frame number" wfc "sent" bw "bytes"
         end
     end
     --
-    if dbg then say "writer ends"
+    if wtrdbg then say "writer ends"
 
 ::method reader unguarded
-    expose socket shutdown errq rcptq msgq NL DNL X00
+    expose socket shutdown errq rcptq msgq NL DNL X00 rdrdbg
     use strict arg rst
-    dbg = .true
-    if dbg then say "reader starts"
+    if rdrdbg then say "reader starts"
     hbb = ""
     --
     -- The reader implementation is a state machine.
@@ -156,7 +150,7 @@
         select
             --
             when state == moredata then do
-                if dbg then say "state is moredata"
+                if rdrdbg then say "state is moredata"
                 ret = SockRecv(socket, 'ldata', 1024)
                 if ret < 1 then do
                     if ret < 0 then
@@ -171,7 +165,7 @@
             end
             --
             when state == nldrain then do
-                if dbg then say "state is nldrain"
+                if rdrdbg then say "state is nldrain"
                 do while hbb~subchar(1) == .string~nl
                     if hbb~length == 1 then do
                         hbb = ""
@@ -189,7 +183,7 @@
             end
             --
             when state == findeoh then do
-                if dbg then say "state is findeoh"
+                if rdrdbg then say "state is findeoh"
                 if hbb~subchar(1) == NL then do
                     headers = .headers~new
                     hbb = hbb~substr(2)
@@ -227,7 +221,7 @@
             end
             --
             when state == accumbdy0 then do
-                if dbg then say "state is accumbdy0"
+                if rdrdbg then say "state is accumbdy0"
                 px0 = hbb~pos(.stc~X00)
                 if px0 > 0 then do
                     body = hbb~substr(1,px0-1)
@@ -258,7 +252,7 @@
             end
             --
             when state == sendq then do
-                if dbg then say "state is sendq"
+                if rdrdbg then say "state is sendq"
                 --
                 -- say "command:" command
                 -- headers~pp("parsed headers:")
@@ -280,7 +274,7 @@
             end
             --
             when state == getcmd then do
-                if dbg then say "state is getcmd"
+                if rdrdbg then say "state is getcmd"
                 if hbb~pos(NL) == 0 then do
                     state = moredata
                     resumest = getcmd
@@ -297,7 +291,7 @@
             end
             --
             when state == accumbdyl then do
-                if dbg then say "state is accumbdyl"
+                if rdrdbg then say "state is accumbdyl"
                 hbl = hbb~length
                 do while hbl < fcl
                     ret = SockRecv(socket, 'ldata', 1024)
@@ -319,7 +313,7 @@
         end -- select
     end -- forever do
     --
-    if dbg then say "reader ends"
+    if rdrdbg then say "reader ends"
 --
 ::method recverr
     expose errq
@@ -365,6 +359,78 @@
         if tf <> .nil then return tf
         call SysSleep slt
     end
+
+--
+::method loadopts private
+    expose discdbg rdrdbg wtrdbg,
+        rdrslt wtrslt,
+        wtrq rcptq errq,
+        NL DNL X00
+    use arg sopt
+    --
+    ldbg = .false
+    --
+    wtrq = .queue~new
+    errq = .queue~new
+    rcptq = .queue~new
+    msgq = .queue~new
+    --
+    NL = .string~nl
+    DNL = .string~nl || .string~nl
+    X00 = "00"~x2c
+    --
+    if sopt == "SOPT" then ho = .false
+    else ho = .true
+    --
+    discdbg = .false
+    if ho then do
+        if sopt~entry("discdbg") <> .nil then
+            discdbg = .true
+    end
+    t = value("STOMPRX_DISCDBG", "", .stc~env)
+    if t <> "" then
+        discdbg = .true
+    if ldbg then say "discdbg:" discdbg
+    --
+    rdrdbg = .false
+    if ho then do
+        if sopt~entry("rdrdbg") <> .nil then
+            rdrdbg = .true
+    end
+    t = value("STOMPRX_RDRDBG", "", .stc~env)
+    if t <> "" then
+        rdrdbg = .true
+    if ldbg then say "rdrdbg:" rdrdbg
+    --
+    wtrdbg = .false
+    if ho then do
+        if sopt~entry("wtrdbg") <> .nil then
+            wtrdbg = .true
+    end
+    t = value("STOMPRX_WTRDBG", "", .stc~env)
+    if t <> "" then
+        wtrdbg = .true
+    if ldbg then say "wtrdbg:" wtrdbg
+    --
+    rdrslt = 0.2
+    if ho then do
+        if sopt~entry("rdrslt") <> .nil then
+            rdrslt = sopt~entry("rdrslt")
+    end
+    t = value("STOMPRX_RDRSLT", "", .stc~env)
+    if t <> "" then
+        rdrslt = t
+    if ldbg then say "rdrslt:" rdrslt
+    --
+    wtrslt = 0.2
+    if ho then do
+        if sopt~entry("wtrslt") <> .nil then
+            wtrslt = sopt~entry("wtrslt")
+    end
+    t = value("STOMPRX_WTRSLT", "", .stc~env)
+    if t <> "" then
+        wtrslt = t
+    if ldbg then say "wtrslt:" wtrslt
 
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */

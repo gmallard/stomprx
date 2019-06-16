@@ -65,3 +65,4 @@
 ::constant 	HK_VHOST           "host"
 
 /* Misc. */
+::constant env "ENVIRONMENT"
