@@ -432,6 +432,14 @@
         wtrslt = t
     if ldbg then say "wtrslt:" wtrslt
 
+::method send
+    expose wtrq
+    use strict arg h,b
+    if h~value(.stc~HK_DESTINATION) == .nil then return -1
+    sf = .frame~new(.stc~SEND, h, b)
+    wtrq~append(sf)
+    return 0
+
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */
 ::requires "uuid.cls"
