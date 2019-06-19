@@ -435,6 +435,16 @@
         wtrslt = t
     if ldbg then say "wtrslt:" wtrslt
 
+--
+-- Stomp SEND
+-- Required Headers:
+-- destination - for all STOMP protocol levels
+-- Optional Headers:
+-- Any user supplied header
+--
+-- Return code is -1 if destination headers not present.
+-- Retrun code is 0 otherwise.
+--
 ::method send
     expose wtrq
     use strict arg h,b
