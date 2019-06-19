@@ -33,7 +33,8 @@
         wtrq errq rcptq msgq,
         shutdown NL DNL X00,
         discdbg rdrdbg wtrdbg,
-        rdrslt wtrslt
+        rdrslt wtrslt,
+        subl
     use strict arg as, ch, od
     socket = as
     -- encode / decode data logic
@@ -368,7 +369,7 @@
     expose discdbg rdrdbg wtrdbg,
         rdrslt wtrslt,
         wtrq rcptq errq,
-        NL DNL X00
+        NL DNL X00 subl
     use arg sopt
     --
     ldbg = .false
@@ -377,6 +378,7 @@
     errq = .queue~new
     rcptq = .queue~new
     msgq = .queue~new
+    subl = .directory~new
     --
     NL = .string~nl
     DNL = .string~nl || .string~nl
@@ -445,7 +447,7 @@
 -- Return code is -1 if destination headers not present.
 -- Retrun code is 0 otherwise.
 --
-::method send
+::method send public
     expose wtrq
     use strict arg h,b
     if h~value(.stc~HK_DESTINATION) == .nil then return -1
@@ -453,6 +455,68 @@
     -- h~pp("In SEND. headers:")
     tix = wtrq~append(sf)
     -- say "send tix:" tix
+    return 0
+
+--
+-- Stomp SUBSCRIBE
+-- Required Headers:
+-- destination - for all STOMP protocol levels
+-- id - for protocol levels 1.1 and 1.2
+-- Optional Headers:
+-- ack - for all protocol levels
+--
+::method subscribe public
+    expose wtrq protocol subl
+    use arg sh,ocbq
+    --
+    if sh == "SH" then return -1
+    if sh~value(.stc~HK_DESTINATION) == .nil then return -2
+    lid = sh~value(.stc~HK_ID)
+    if protocol <> .stc~SPL_10 then do
+        if lid == .nil then return -3
+    end
+    else do
+        -- Proto 1.0
+        if lid == .nil then do
+            lid = .uuid~get
+            ih = .header~new(.stc~HK_ID, lid)
+            sh~add(ih)
+        end
+    end
+    sf = .frame~new(.stc~SUBSCRIBE, sh, "")
+    tix = wtrq~append(sf)
+    --
+    -- say "lid" lid lid~class
+
+    if ocbq == "OCBQ" then do
+        nsub = .subscription~new(sh)
+        subl~put(nsub, lid)
+    end
+    else do
+        nsub = .subscription~new(sh, ocbq)
+        subl~put(nsub, lid)
+    end
+    --
+    return 0
+
+--
+-- Stomp UNSUBSCRIBE
+-- Required Headers:
+-- destination - for all STOMP protocol levels
+-- id - for protocol levels 1.1 and 1.2.  NOTE: stomprx also requires an id
+--      header for protocol level 1.0
+-- Optional Headers:
+--
+::method unsubscribe public
+    expose wtrq protocol subl
+    use arg ush,ocbq
+    --
+    if ush == "USH" then return -1
+    if ush~value(.stc~HK_DESTINATION) == .nil then return -2
+    if ush~value(.stc~HK_ID) == .nil then return -3
+    sf = .frame~new(.stc~UNSUBSCRIBE, ush, "")
+    tix = wtrq~append(sf)
+    --
     return 0
 
 ::requires 'rxsock' LIBRARY
@@ -463,4 +527,5 @@
 ::requires "headers.cls"
 ::requires "strutls.rex"
 ::requires "frame.cls"
+::requires "subscription.cls"
 ::requires "netconn.cls"
