@@ -44,7 +44,7 @@
     -- say "raw data:"
     -- say cf~wirestring~c2x
     -- Write the CONNECT frame
-    bw = SockSend(socket, cf~wirestring)
+    bw = SockSend(socket, cf~wirestring || .string~nl)
     -- say "Bytes written:" bw    
     call SysSleep(0.1)
     retc = SockRecv(socket, 'rcf', 2048)
@@ -69,13 +69,16 @@
     end
     --
     self~loadopts(od)
-    -- start the writer
     shutdown = .false
-    -- say "XDBG starting writer" wtrslt
-    self~start("writer", wtrslt)
-    -- say "XDBG done starting writer" wtrslt
+    --
     -- start the reader
     self~start("reader", rdrslt)
+    call SysSleep 0.2
+    -- start the writer
+    -- say "XDBG starting writer" wtrslt
+    self~start("writer", wtrslt)
+    call SysSleep 0.2
+    -- say "XDBG done starting writer" wtrslt
 
 ::method disconnect public
     expose socket wtrq shutdown discdbg
@@ -89,7 +92,7 @@
     discdbg = .true
     df = .frame~new(.stc~DISCONNECT, useh, "")
     in = wtrq~append(df) -- send frame to writer
-    call SysSleep 0.4
+    call SysSleep 0.5
     shutdown = .true
     --
     retc = SockClose(socket)
@@ -106,15 +109,17 @@
         lc = lc + 1 
         -- say "writer start next loop" lc
         if shutdown then leave
+        --
         nxf = wtrq~pull
         if nxf == .nil then do
             -- say "writer sleeps"
             call SysSleep wst
             iterate
         end
+        -- nxf~pp("In Frame writer:")
         wfc = wfc + 1
         nfd = nxf~wirestring
-        bw = SockSend(socket, nfd)
+        bw = SockSend(socket, nfd || .string~nl)
         if wtrdbg then do
             say "frame number" wfc "sent" bw "bytes"
         end
@@ -125,7 +130,7 @@
 ::method reader unguarded
     expose socket shutdown errq rcptq msgq NL DNL X00 rdrdbg
     use strict arg rst
-    if rdrdbg then say "reader starts"
+    if rdrdbg then say "READER: reader starts"
     hbb = ""
     --
     -- The reader implementation is a state machine.
@@ -146,17 +151,14 @@
     state = moredata
     resumest = nldrain
     do forever
-        if shutdown then leave
         select
             --
             when state == moredata then do
-                if rdrdbg then say "state is moredata"
+                if rdrdbg then say "READER: state is moredata"
                 ret = SockRecv(socket, 'ldata', 1024)
                 if ret < 1 then do
-                    if ret < 0 then
-                        say 'SockRecv failed:' errno
-                    else
-                        say 'Socket closed:' errno
+                    if ret < 0 then say 'READER: SockRecv failed:' errno
+                    else say 'READER: Socket closed:' errno
                     leave
                 end
                 hbb = hbb || ldata
@@ -165,7 +167,7 @@
             end
             --
             when state == nldrain then do
-                if rdrdbg then say "state is nldrain"
+                if rdrdbg then say "READER: state is nldrain"
                 do while hbb~subchar(1) == .string~nl
                     if hbb~length == 1 then do
                         hbb = ""
@@ -183,7 +185,7 @@
             end
             --
             when state == findeoh then do
-                if rdrdbg then say "state is findeoh"
+                if rdrdbg then say "READER: state is findeoh"
                 if hbb~subchar(1) == NL then do
                     headers = .headers~new
                     hbb = hbb~substr(2)
@@ -221,8 +223,8 @@
             end
             --
             when state == accumbdy0 then do
-                if rdrdbg then say "state is accumbdy0"
-                px0 = hbb~pos(.stc~X00)
+                if rdrdbg then say "READER: state is accumbdy0"
+                px0 = hbb~pos(X00)
                 if px0 > 0 then do
                     body = hbb~substr(1,px0-1)
                     hbb = hbb~substr(px0+1)
@@ -252,7 +254,7 @@
             end
             --
             when state == sendq then do
-                if rdrdbg then say "state is sendq"
+                if rdrdbg then say "READER: state is sendq"
                 --
                 -- say "command:" command
                 -- headers~pp("parsed headers:")
@@ -274,7 +276,7 @@
             end
             --
             when state == getcmd then do
-                if rdrdbg then say "state is getcmd"
+                if rdrdbg then say "READER: state is getcmd"
                 if hbb~pos(NL) == 0 then do
                     state = moredata
                     resumest = getcmd
@@ -291,15 +293,15 @@
             end
             --
             when state == accumbdyl then do
-                if rdrdbg then say "state is accumbdyl"
+                if rdrdbg then say "READER: state is accumbdyl"
                 hbl = hbb~length
                 do while hbl < fcl
                     ret = SockRecv(socket, 'ldata', 1024)
                     if ret < 1 then do
                         if ret < 0 then
-                            say 'SockRecv failed:' errno
+                            say 'READER: SockRecv failed:' errno
                         else
-                            say 'Socket closed:' errno
+                            say 'READER: Socket closed:' errno
                         leave
                     end
                     hbb = hbb || ldata
@@ -311,9 +313,10 @@
                 iterate
             end
         end -- select
+        if shutdown then leave
     end -- forever do
     --
-    if rdrdbg then say "reader ends"
+    if rdrdbg then say "READER: reader ends"
 --
 ::method recverr
     expose errq
@@ -321,7 +324,7 @@
     --
     if slt == "SLT" then do
         tf = errq~pull
-        retrun tf
+        return tf
     end
     --
     do forever
@@ -336,7 +339,7 @@
     --
     if slt == "SLT" then do
         tf = rcptq~pull
-        retrun tf
+        return tf
     end
     --
     do forever
@@ -351,7 +354,7 @@
     --
     if slt == "SLT" then do
         tf = msgq~pull
-        retrun tf
+        return tf
     end
     --
     do forever
@@ -437,7 +440,9 @@
     use strict arg h,b
     if h~value(.stc~HK_DESTINATION) == .nil then return -1
     sf = .frame~new(.stc~SEND, h, b)
-    wtrq~append(sf)
+    -- h~pp("In SEND. headers:")
+    tix = wtrq~append(sf)
+    -- say "send tix:" tix
     return 0
 
 ::requires 'rxsock' LIBRARY
