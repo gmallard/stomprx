@@ -14,10 +14,12 @@
  limitations under the License.
 */
 
+say "connect starts" time("L")
 asock = .netconn~open(.nil)
 ch = .headers~connhdr10
 cod = .directory~new
 sc = .connection~new(asock, ch, cod)
+say "newconn complete" time("L")
 say "session:" sc~session
 say "server:" sc~server
 say "protocol:" sc~protocol
@@ -30,12 +32,13 @@ if getr then do
     dh = .headers~new
     rc = .header~new(.stc~HK_RECEIPT, "test.receipt.id")
     dh~add(rc)
+    say "disconnect starts" time("L")
     sc~disconnect(dh)
     rf = sc~recvrcpt(0.3)
     rf~pp("RECEIPT Frame:")
 end
 else sc~disconnect
 
-say "disconnect done"
+say "disconnect done" time("L")
 --
 ::requires "../stomprx.cls"
