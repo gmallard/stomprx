@@ -129,7 +129,8 @@
     if wtrdbg then say "writer ends"
 
 ::method reader unguarded
-    expose socket shutdown errq rcptq msgq NL DNL X00 rdrdbg
+    expose socket shutdown errq rcptq msgq NL DNL X00 rdrdbg,
+        subl
     use strict arg rst
     if rdrdbg then say "READER: reader starts"
     hbb = ""
@@ -156,6 +157,7 @@
             --
             when state == moredata then do
                 if rdrdbg then say "READER: state is moredata"
+                if rdrdbg then say "READER: hbb md" hbb~c2x
                 ret = SockRecv(socket, 'ldata', 1024)
                 if ret < 1 then do
                     if ret < 0 then say 'READER: SockRecv failed:' errno
@@ -169,6 +171,7 @@
             --
             when state == nldrain then do
                 if rdrdbg then say "READER: state is nldrain"
+                if rdrdbg then say "READER: hbb nld" hbb~c2x
                 do while hbb~subchar(1) == .string~nl
                     if hbb~length == 1 then do
                         hbb = ""
@@ -187,6 +190,7 @@
             --
             when state == findeoh then do
                 if rdrdbg then say "READER: state is findeoh"
+                if rdrdbg then say "READER: hbb feoh" hbb~c2x
                 if hbb~subchar(1) == NL then do
                     headers = .headers~new
                     hbb = hbb~substr(2)
@@ -256,6 +260,7 @@
             --
             when state == sendq then do
                 if rdrdbg then say "READER: state is sendq"
+                if rdrdbg then say "READER: hbb seq" hbb~c2x
                 --
                 -- say "command:" command
                 -- headers~pp("parsed headers:")
@@ -263,9 +268,36 @@
                 -- leave
                 --
                 nf = .frame~new(command, headers, body)
-                if command == .stc~ERROR then errq~append(nf)
-                if command == .stc~RECEIPT then rcptq~append(nf)
-                if command == .stc~MESSAGE then msgq~append(nf)
+                -- nf~pp("READER Frame Dump:")
+                lcldbg = .false
+                select
+                    when command == .stc~ERROR then do
+                        if lcldbg then say "READER: append errq"
+                        errq~append(nf)
+                    end
+                    when command == .stc~RECEIPT then do
+                        if lcldbg then say "READER: append rcptq"
+                        rcptq~append(nf)
+                    end
+                    when command == .stc~MESSAGE then do
+                        if lcldbg then say "READER: have MESSAGE"
+                        msub = headers~value(.stc~HK_SUBSCRIPTION)
+                        sent = subl~at(msub)
+                        if sent == .nil then do
+                            if lcldbg then say "READER: append msgq 1"
+                            msgq~append(nf)
+                        end
+                        else
+                            if sent~msgq == .nil then do
+                                if lcldbg then say "READER: append msgq 2"
+                                msgq~append(nf)
+                            end
+                            else do
+                                if lcldbg then say "READER: append sent~msgq"
+                                sent~msgq~append(nf)
+                            end
+                    end
+                end
                 --
                 command = ""
                 headers = ""
@@ -278,6 +310,7 @@
             --
             when state == getcmd then do
                 if rdrdbg then say "READER: state is getcmd"
+                if rdrdbg then say "READER: hbb gtc" hbb~c2x
                 if hbb~pos(NL) == 0 then do
                     state = moredata
                     resumest = getcmd
@@ -295,7 +328,9 @@
             --
             when state == accumbdyl then do
                 if rdrdbg then say "READER: state is accumbdyl"
+                if rdrdbg then say "READER: hbb accl" hbb~c2x
                 hbl = hbb~length
+                if rdrdbg then say "READER: lens hbl" hbl "fcl" fcl
                 do while hbl < fcl
                     ret = SockRecv(socket, 'ldata', 1024)
                     if ret < 1 then do
@@ -309,7 +344,8 @@
                 end
                 --
                 body = hbb~substr(1, fcl)
-                hbb = hbb~substr(fcl + 1)
+                -- Get Past body and X00
+                hbb = hbb~substr(fcl + 2)
                 state = sendq
                 iterate
             end
@@ -365,10 +401,35 @@
     end
 
 --
+::method receive
+    expose errq rcptq msgq
+    use arg slt
+    --
+    if slt == "SLT" then do
+        tf = errq~pull
+        if tf <> .nil then return tf
+        tf = rcptq~pull
+        if tf <> .nil then return tf
+        tf = msgq~pull
+        if tf <> .nil then return tf
+        return .nil
+    end
+    --
+    do forever
+        tf = errq~pull
+        if tf <> .nil then return tf
+        tf = rcptq~pull
+        if tf <> .nil then return tf
+        tf = msgq~pull
+        if tf <> .nil then return tf
+        call SysSleep slt
+    end
+
+--
 ::method loadopts private
     expose discdbg rdrdbg wtrdbg,
         rdrslt wtrslt,
-        wtrq rcptq errq,
+        wtrq rcptq errq msgq,
         NL DNL X00 subl
     use arg sopt
     --
@@ -491,10 +552,12 @@
     if ocbq == "OCBQ" then do
         nsub = .subscription~new(sh)
         subl~put(nsub, lid)
+        -- say "No OCBQ, lid:" lid
     end
     else do
         nsub = .subscription~new(sh, ocbq)
         subl~put(nsub, lid)
+        -- say "Have OCBQ, lid:" lid
     end
     --
     return 0
@@ -518,6 +581,11 @@
     tix = wtrq~append(sf)
     --
     return 0
+
+::method shutdown
+    expose socket shutdown
+    shutdown = .true
+    retc = SockClose(socket)
 
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */
