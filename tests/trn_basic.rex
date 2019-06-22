@@ -14,9 +14,9 @@
  limitations under the License.
 */
 
--- call testa
--- call testb
--- call testc
+call testa
+call testb
+call testc
 call testd
 exit
 
@@ -39,14 +39,17 @@ exit
     --
     rc = sc~begin(hdrsb)
     say
+    say "expect -1"
     say "testa BEGIN rc:" rc  -- expect a -1 here
     --
     rc = sc~commit(hdrsb)
     say
+    say "expect -1"
     say "testa COMMIT rc:" rc  -- expect a -1 here
     --
     rc = sc~abort(hdrsb)
     say
+    say "expect -1"
     say "testa ABORT rc:" rc  -- expect a -1 here
     --    
     say
@@ -85,14 +88,17 @@ exit
     --
     rc = sc~begin(hdrs1)
     say
+    say "expect 0"
     say "testb BEGIN rc:" rc -- expect 0
     --
     rc = sc~begin(hdrs1) -- second time, same trn
     say
+    say "expect -2"
     say "testb BEGIN rc:" rc -- expect -2
     --
     rc = sc~commit(hdrs1)
     say
+    say "expect 0"
     say "testb COMMIT rc:" rc -- expect 0
     --    
     say
@@ -131,10 +137,12 @@ exit
     --
     rc = sc~begin(hdrs1)
     say
+    say "expect 0"
     say "testc BEGIN rc:" rc -- expect 0
     --
     rc = sc~abort(hdrs1)
     say
+    say "expect 0"
     say "testc ABORT rc:" rc -- expect 0
     --    
     say
@@ -173,10 +181,12 @@ exit
     --
     rc = sc~commit(hdrs1)
     say
+    say "expect -2"
     say "testd COMMIT rc:" rc -- expect a -2
     --
     rc = sc~abort(hdrs1)
     say
+    say "expect -2"
     say "testd ABORT rc:" rc -- expect a -2
     --    
     say
