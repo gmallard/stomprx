@@ -34,7 +34,7 @@
         shutdown NL DNL X00,
         discdbg rdrdbg wtrdbg,
         rdrslt wtrslt,
-        subl
+        subl atrl
     use strict arg as, ch, od
     socket = as
     -- encode / decode data logic
@@ -430,7 +430,7 @@
     expose discdbg rdrdbg wtrdbg,
         rdrslt wtrslt,
         wtrq rcptq errq msgq,
-        NL DNL X00 subl
+        NL DNL X00 subl atrl
     use arg sopt
     --
     ldbg = .false
@@ -440,6 +440,7 @@
     rcptq = .queue~new
     msgq = .queue~new
     subl = .directory~new
+    atrl = .directory~new
     --
     NL = .string~nl
     DNL = .string~nl || .string~nl
@@ -582,10 +583,60 @@
     --
     return 0
 
+-- Call this if you cannot use DISCONNECT
 ::method shutdown
     expose socket shutdown
     shutdown = .true
     retc = SockClose(socket)
+
+--
+-- Stomp BEGIN
+-- Required Headers:
+-- transaction - all protocol levels
+::method begin public
+    expose wtrq atrl
+    use strict arg h
+    tid = h~value(.stc~HK_TRANSACTION)
+    if  tid == .nil then return -1
+    isact = atrl~at(tid)
+    if isact == .true then return -2
+    sf = .frame~new(.stc~BEGIN, h, "")
+    tix = wtrq~append(sf)
+    atrl~put(.true, tid)
+    return 0
+
+--
+-- Stomp COMMIT
+-- Required Headers:
+-- transaction - all protocol levels
+::method commit public
+    expose wtrq atrl
+    use strict arg h
+    tid = h~value(.stc~HK_TRANSACTION)
+    if  tid == .nil then return -1
+    isact = atrl~at(tid)
+    if isact == .nil then return -2
+    --
+    sf = .frame~new(.stc~COMMIT, h, "")
+    tix = wtrq~append(sf)
+    t = atrl~remove(tid)
+    return 0
+
+--
+-- Stomp ABORT
+-- Required Headers:
+-- transaction - all protocol levels
+::method abort public
+    expose wtrq atrl
+    use strict arg h
+    tid = h~value(.stc~HK_TRANSACTION)
+    if  tid == .nil then return -1
+    isact = atrl~at(tid)
+    if isact == .nil then return -2
+    sf = .frame~new(.stc~ABORT, h, "")
+    tix = wtrq~append(sf)
+    t = atrl~remove(tid)
+    return 0
 
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */
