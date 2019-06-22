@@ -638,6 +638,68 @@
     t = atrl~remove(tid)
     return 0
 
+--
+-- Stomp ACK
+-- Required Headers:
+-- Protocol Level 1.0 -
+--  message-id - match the message being ACKd
+-- Protocol Level 1.1 -
+--  message-id - match the message being ACKd
+--  subscription - the value of the subscriptions id header
+-- Protocol Level 1.2 -
+--  id - matching the ack header of the message being ACKd
+--
+::method ack public
+    expose wtrq protocol
+    use strict arg h
+    --
+    select
+        when protocol == .stc~SPL_10 then do
+            if h~value(.stc~HK_MESSAGE_ID) == .nil then return -1
+        end
+        when protocol == .stc~SPL_11 then do
+            if h~value(.stc~HK_MESSAGE_ID) == .nil then return -2
+            if h~value(.stc~HK_SUBSCRIPTION) == .nil then return -3
+        end
+        when protocol == .stc~SPL_12 then do
+            if h~value(.stc~HK_ID) == .nil then return -4
+        end
+    end
+    sf = .frame~new(.stc~ACK, h, "")
+    tix = wtrq~append(sf)
+    return 0
+
+--
+-- Stomp NACK
+-- Required Headers:
+-- Protocol Level 1.0 -
+--  N/A
+-- Protocol Level 1.1 -
+--  message-id - match the message being ACKd
+--  subscription - the value of the subscriptions id header
+-- Protocol Level 1.2 -
+--  id - matching the ack header of the message being ACKd
+--
+::method nack public
+    expose wtrq protocol
+    use strict arg h
+    --
+    select
+        when protocol == .stc~SPL_10 then do
+            return -1
+        end
+        when protocol == .stc~SPL_11 then do
+            if h~value(.stc~HK_MESSAGE_ID) == .nil then return -2
+            if h~value(.stc~HK_SUBSCRIPTION) == .nil then return -3
+        end
+        when protocol == .stc~SPL_12 then do
+            if h~value(.stc~HK_ID) == .nil then return -4
+        end
+    end
+    sf = .frame~new(.stc~NACK, h, "")
+    tix = wtrq~append(sf)
+    return 0
+
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */
 ::requires "uuid.cls"
