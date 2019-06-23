@@ -20,7 +20,7 @@
 --
 -- Attributes
 --
-::attribute edd get
+-- ::attribute edd get
 ::attribute connframe get
 ::attribute protocol get
 ::attribute session get
@@ -38,7 +38,7 @@
     use strict arg as, ch, od
     socket = as
     -- encode / decode data logic
-    edd = .encdec~new
+    -- edd = .encdec~new
     --
     cf = .frame~new(.stc~CONNECT, ch, "")
     -- cf~pp("Connect Frame:")
@@ -100,7 +100,7 @@
     if discdbg then say "disconnect close return code:" retc
     
 ::method writer unguarded
-    expose socket wtrq shutdown wtrdbg
+    expose socket wtrq shutdown wtrdbg protocol
     use strict arg wst
     -- say "XDBG wtr starts" wtrdbg wst
     if wtrdbg then say "writer starts"
@@ -118,6 +118,9 @@
             iterate
         end
         -- nxf~pp("In Frame writer:")
+        if protocol <> .stc~SPL_10 then do
+            nxf~hdrs~encode
+        end
         wfc = wfc + 1
         nfd = nxf~wirestring
         bw = SockSend(socket, nfd || .string~nl)
@@ -130,7 +133,7 @@
 
 ::method reader unguarded
     expose socket shutdown errq rcptq msgq NL DNL X00 rdrdbg,
-        subl
+        subl protocol
     use strict arg rst
     if rdrdbg then say "READER: reader starts"
     hbb = ""
@@ -210,6 +213,8 @@
                 end
                 parse var hbb hs (DNL) hbb
                 headers = .headers~fromstring(hs)
+                -- Always decode, regardless of protocol level
+                headers~decode(edd)
                 if hbb~subchar(1) == X00 then do
                     hbb = hbb~substr(2)
                     body = ""

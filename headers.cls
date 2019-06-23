@@ -21,9 +21,10 @@
 -- CTOR
 --
 ::method init public
-    expose hl
+    expose hl eder
     self~init:super
     hl = .list~new
+    eder = .encdecer~new
 --
 --
 ::method connhdr10 public class
@@ -160,19 +161,17 @@
 
 --
 ::method encode public
-    expose hl
-    use strict arg edl
+    expose hl eder
     do hn over hl~allItems
-        hn~key = edl~enc(hn~key)
-        hn~value = edl~enc(hn~value)
+        hn~key = eder~enc(hn~key)
+        hn~value = eder~enc(hn~value)
     end
 --
 ::method decode public
-    expose hl
-    use strict arg edl
+    expose hl eder
     do hn over hl~allItems
-        hn~key = edl~dec(hn~key)
-        hn~value = edl~dec(hn~value)
+        hn~key = eder~dec(hn~key)
+        hn~value = eder~dec(hn~value)
     end
 
 --
@@ -198,5 +197,87 @@
         end
     end
     return .false
+
+-- ///////////////////////////////////////////////////////////////////////////
+::class encdecer public
+
+--
+::method init public
+    expose edl
+    x = .edlist~new
+    edl = x~list
+
+--
+::method enc public
+    expose edl
+    use strict arg ind
+    oe = ind
+    do x over edl~allItems
+        oe = oe~changeStr(x~decoded, x~encoded)
+    end
+    return oe
+
+--
+::method dec public
+    expose edl
+    use strict arg ine
+    od = ine
+    do x over edl~allItems
+        od = od~changeStr(x~encoded, x~decoded)
+    end
+    return od
+
+--
+::method pp public
+    expose edl
+    use strict arg t
+    say t
+    --
+    do ne over edl~allItems
+        ne~pp("Next E/D Pair:")
+    end
+-- ///////////////////////////////////////////////////////////////////////////
+::class edlist public
+
+--
+::method init public
+    expose edl
+    edl = .list~new
+    edl~append(.edelt~new("\\", "\"))
+    edl~append(.edelt~new("\n", .string~nl))
+    edl~append(.edelt~new("\r", "0d"~x2c))
+    edl~append(.edelt~new("\c", ":"))
+
+--
+::method list public
+    expose edl
+    return edl
+
+-- ///////////////////////////////////////////////////////////////////////////
+::class edelt public
+
+--
+::method init public
+    expose encoded decoded
+    use strict arg enc,dec
+    encoded = enc
+    decoded = dec
+
+--
+::method encoded public
+    expose encoded
+    return encoded
+
+--
+::method decoded public
+    expose decoded
+    return decoded
+
+--
+::method pp public
+    expose encoded decoded
+    use strict arg t
+    say t
+    say "Encoded->"encoded", Decoded->"decoded
 
 ::requires "header.cls"
