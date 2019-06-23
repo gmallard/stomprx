@@ -44,10 +44,10 @@
     hl = .headers~new
     --
     rv = hl~add("junk")
-    say "Retrun from junk add is:" rv
+    say "Return from junk add is:" rv
     nh = .header~new("KA", "VA")
     rv = hl~add(nh)
-    say "Retrun from OK add is:" rv
+    say "Return from OK add is:" rv
     hl~pp("hadd test header list:")
 
 --
