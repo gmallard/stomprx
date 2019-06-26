@@ -20,7 +20,6 @@
 --
 -- Attributes
 --
--- ::attribute edd get
 ::attribute connframe get
 ::attribute protocol get
 ::attribute session get
@@ -37,8 +36,6 @@
         subl atrl
     use strict arg as, ch, od
     socket = as
-    -- encode / decode data logic
-    -- edd = .encdec~new
     --
     cf = .frame~new(.stc~CONNECT, ch, "")
     -- cf~pp("Connect Frame:")
@@ -117,10 +114,11 @@
             call SysSleep wst
             iterate
         end
-        -- nxf~pp("In Frame writer:")
+        -- nxf~pp("In Frame writer Before Encode:")
         if protocol <> .stc~SPL_10 then do
             nxf~hdrs~encode
         end
+        -- nxf~pp("In Frame writer After Encode:")
         wfc = wfc + 1
         nfd = nxf~wirestring
         bw = SockSend(socket, nfd || .string~nl)
@@ -213,8 +211,10 @@
                 end
                 parse var hbb hs (DNL) hbb
                 headers = .headers~fromstring(hs)
+                -- headers~pp("Read Headers Before Decode:")
                 -- Always decode, regardless of protocol level
                 headers~decode(edd)
+                -- headers~pp("Read Headers After Decode:")
                 if hbb~subchar(1) == X00 then do
                     hbb = hbb~substr(2)
                     body = ""
