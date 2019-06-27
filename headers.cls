@@ -28,34 +28,44 @@
 --
 --
 ::method connhdr10 public class
-    h10 = .headers~new
-    hl = .header~new("login", "guest")
-    hp = .header~new("passcode", "guest")
-    hv = .header~new("accept-version", "1.0")
-    hh = .header~new("host", "localhost")
-    h10~add(hl); h10~add(hp); h10~add(hv); h10~add(hh)
-    return h10
+    return .headers~connhdrx("1.0")
 
 --
 ::method connhdr11 public class
-    h11 = .headers~new
-    hl = .header~new("login", "guest")
-    hp = .header~new("passcode", "guest")
-    hv = .header~new("accept-version", "1.1")
-    hh = .header~new("host", "localhost")
-    hhb = .header~new("heart-beat", "0,0")
-    h11~add(hl); h11~add(hp); h11~add(hv); h11~add(hh); h11~add(hhb)
-    return h11
+    return .headers~connhdrx("1.1")
+
 --
 ::method connhdr12 public class
-    h12 = .headers~new
-    hl = .header~new("login", "guest")
-    hp = .header~new("passcode", "guest")
-    hv = .header~new("accept-version", "1.2")
-    hh = .header~new("host", "localhost")
-    hhb = .header~new("heart-beat", "0,0")
-    h12~add(hl); h12~add(hp); h12~add(hv); h12~add(hh); h12~add(hhb)
-    return h12
+    return .headers~connhdrx("1.2")
+
+--
+::method connhdrx public class
+    use strict arg proto
+    rh = .headers~new
+    --
+    hv = "guest"
+    t = value("STOMP_LOGIN", "", .stc~env)
+    if t <> "" then hv = t
+    rh~add(.header~new(.stc~HK_LOGIN, hv))
+    --
+    hv = "guest"
+    t = value("STOMP_PASSCODE", "", .stc~env)
+    if t <> "" then hv = t
+    rh~add(.header~new(.stc~HK_PASSCODE, hv))
+    --
+    hv = "localhost"
+    t = value("STOMP_VHOST", "", .stc~env)
+    if t <> "" then hv = t
+    rh~add(.header~new(.stc~HK_VHOST, hv))
+    --
+    hv = "0,0"
+    t = value("STOMP_HEARTBEAT", "", .stc~env)
+    if t <> "" then hv = t
+    rh~add(.header~new(.stc~HK_HEART_BEAT, hv))
+    --
+    rh~add(.header~new(.stc~HK_ACCEPT_VERSION, proto))
+    return rh
+
 --
 ::method fromstring public class
     use strict arg ins
@@ -280,4 +290,5 @@
     say t
     say "Encoded->"encoded", Decoded->"decoded
 
+::requires "stc.cls"
 ::requires "header.cls"
