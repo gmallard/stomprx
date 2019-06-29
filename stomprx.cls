@@ -78,6 +78,15 @@
     call SysSleep 0.2
     -- say "XDBG done starting writer" wtrslt
 
+--
+-- STOMP DISCONNECT
+-- Required Parameters:
+--      None
+-- Optional Parameters:
+--      Headers with a RECEIPT request
+-- Returns:
+--      Nothing
+--
 ::method disconnect public
     expose socket wtrq shutdown discdbg
     use arg odh
@@ -359,6 +368,25 @@
     end -- forever do
     --
     if rdrdbg then say "READER: reader ends"
+
+--
+-- Public Method recverr
+--
+-- Required Parameters:
+--      None
+-- Optional Parameters:
+--      An optional read wait time
+-- Returns:
+--      An ERROR frame or .nil.
+-- Operation:
+--      If the optional read wait time is not present, this method acts
+--      as a polling mechanism.  If an ERROR frame is present on the 
+--      internal ERROR queue it is returned immediately.  Otherwise .nil
+--      is returned.
+--      If the read wait time is present, this method loops until an ERROR
+--      frame becomes available.  The read wait time is used to determine
+--      wait time before looping again.  Be careful, this is potentially
+--      an infinite loop.
 --
 ::method recverr
     expose errq
@@ -375,6 +403,24 @@
         call SysSleep slt
     end
 --
+-- Public Method recvrcpt
+--
+-- Required Parameters:
+--      None
+-- Optional Parameters:
+--      An optional read wait time
+-- Returns:
+--      An RECEIPT frame or .nil.
+-- Operation:
+--      If the optional read wait time is not present, this method acts
+--      as a polling mechanism.  If an RECEIPT frame is present on the 
+--      internal RECEIPT queue it is returned immediately.  Otherwise .nil
+--      is returned.
+--      If the read wait time is present, this method loops until an ERROR
+--      frame becomes available.  The read wait time is used to determine
+--      wait time before looping again.  Be careful, this is potentially
+--      an infinite loop.
+--
 ::method recvrcpt
     expose rcptq
     use arg slt
@@ -389,6 +435,24 @@
         if tf <> .nil then return tf
         call SysSleep slt
     end
+--
+-- Public Method recvmsg
+--
+-- Required Parameters:
+--      None
+-- Optional Parameters:
+--      An optional read wait time
+-- Returns:
+--      An MESSAGE frame or .nil.
+-- Operation:
+--      If the optional read wait time is not present, this method acts
+--      as a polling mechanism.  If an MESSAGE frame is present on the 
+--      internal MESSAGE queue it is returned immediately.  Otherwise .nil
+--      is returned.
+--      If the read wait time is present, this method loops until an ERROR
+--      frame becomes available.  The read wait time is used to determine
+--      wait time before looping again.  Be careful, this is potentially
+--      an infinite loop.
 --
 ::method recvmsg
     expose msgq
@@ -405,6 +469,24 @@
         call SysSleep slt
     end
 
+--
+-- Public Method receive
+--
+-- Required Parameters:
+--      None
+-- Optional Parameters:
+--      An optional read wait time
+-- Returns:
+--      An STOMP frame (ERROR, RECEIPT, MESSAGE) or .nil.
+-- Operation:
+--      If the optional read wait time is not present, this method acts
+--      as a polling mechanism.  If a frame is present on any of the
+--      internal frame queues it is returned immediately.  Otherwise .nil
+--      is returned.
+--      If the read wait time is present, this method loops until a
+--      frame becomes available.  The read wait time is used to determine
+--      wait time before looping again.  Be careful, this is potentially
+--      an infinite loop.
 --
 ::method receive
     expose errq rcptq msgq
@@ -510,9 +592,9 @@
 -- destination - for all STOMP protocol levels
 -- Optional Headers:
 -- Any user supplied header
---
--- Return code is -1 if destination headers not present.
--- Retrun code is 0 otherwise.
+-- Returns:
+--      -1 if destination headers not present.
+--      0 otherwise.
 --
 ::method send public
     expose wtrq
@@ -526,11 +608,25 @@
 
 --
 -- Stomp SUBSCRIBE
+-- Required Parameters:
+--      subscribe headers
+-- Optional Parameters:
+--      A user supplied queue.  Received MESSAGE frames will be placed on
+--      this queue (if it is present)
 -- Required Headers:
 -- destination - for all STOMP protocol levels
 -- id - for protocol levels 1.1 and 1.2
 -- Optional Headers:
 -- ack - for all protocol levels
+-- Returns:
+--      -1 if subscribe headers not present.
+--      -2 if no destination header is present
+--      -3 if no id header is present and the protocol level is not 1.0
+-- Operation:
+--      Parameters are checked.
+--      A subscription instance is created and added to the active 
+--      subscrption map.
+--      The subscribe frame is sent to the broker.
 --
 ::method subscribe public
     expose wtrq protocol subl
@@ -550,8 +646,6 @@
             sh~add(ih)
         end
     end
-    sf = .frame~new(.stc~SUBSCRIBE, sh, "")
-    tix = wtrq~append(sf)
     --
     -- say "lid" lid lid~class
 
@@ -565,24 +659,39 @@
         subl~put(nsub, lid)
         -- say "Have OCBQ, lid:" lid
     end
+    sf = .frame~new(.stc~SUBSCRIBE, sh, "")
+    tix = wtrq~append(sf)
     --
     return 0
 
 --
 -- Stomp UNSUBSCRIBE
+-- Required Parameters:
+--      unsubscribe headers
 -- Required Headers:
 -- destination - for all STOMP protocol levels
--- id - for protocol levels 1.1 and 1.2.  NOTE: stomprx also requires an id
---      header for protocol level 1.0
+-- id - for all protocol levels (including 1.0)
 -- Optional Headers:
+-- none
+-- Returns:
+--      -1 if unsubscribe headers not present.
+--      -2 if no destination header is present.
+--      -3 if no id header is present.
+--      -4 if the subscription does not currently exist
+--      0 otherwise
 --
 ::method unsubscribe public
     expose wtrq protocol subl
-    use arg ush,ocbq
+    use arg ush
     --
     if ush == "USH" then return -1
     if ush~value(.stc~HK_DESTINATION) == .nil then return -2
-    if ush~value(.stc~HK_ID) == .nil then return -3
+    lid = ush~value(.stc~HK_ID)
+    if  lid == .nil then return -3
+    tsub = subl~at(lid)
+    if tsub == .nil then return -4
+    t = subl~remove(lid)
+    --
     sf = .frame~new(.stc~UNSUBSCRIBE, ush, "")
     tix = wtrq~append(sf)
     --
@@ -596,8 +705,15 @@
 
 --
 -- Stomp BEGIN
+-- Required Parameters:
+--      begin headers
 -- Required Headers:
 -- transaction - all protocol levels
+-- Returns:
+--      -1 if begin headers not present.
+--      -2 if the transaction already exists
+--      0 otherwise
+--
 ::method begin public
     expose wtrq atrl
     use strict arg h
@@ -612,39 +728,55 @@
 
 --
 -- Stomp COMMIT
+-- Required Parameters:
+--      commit headers
 -- Required Headers:
 -- transaction - all protocol levels
+-- Returns:
+--      -1 if commit headers not present.
+--      -2 if the transaction does not exist
+--      0 otherwise
+--
 ::method commit public
     expose wtrq atrl
     use strict arg h
     tid = h~value(.stc~HK_TRANSACTION)
     if  tid == .nil then return -1
-    isact = atrl~at(tid)
-    if isact == .nil then return -2
+    t = atrl~at(tid)
+    if t == .nil then return -2
     --
     sf = .frame~new(.stc~COMMIT, h, "")
-    tix = wtrq~append(sf)
+    t = wtrq~append(sf)
     t = atrl~remove(tid)
     return 0
 
 --
 -- Stomp ABORT
+-- Required Parameters:
+--      abort headers
 -- Required Headers:
 -- transaction - all protocol levels
+-- Returns:
+--      -1 if abort headers not present.
+--      -2 if the transaction does not exist
+--      0 otherwise
+--
 ::method abort public
     expose wtrq atrl
     use strict arg h
     tid = h~value(.stc~HK_TRANSACTION)
     if  tid == .nil then return -1
-    isact = atrl~at(tid)
-    if isact == .nil then return -2
+    t = atrl~at(tid)
+    if t == .nil then return -2
     sf = .frame~new(.stc~ABORT, h, "")
-    tix = wtrq~append(sf)
+    t = wtrq~append(sf)
     t = atrl~remove(tid)
     return 0
 
 --
 -- Stomp ACK
+-- Required Parameters:
+--      ack headers
 -- Required Headers:
 -- Protocol Level 1.0 -
 --  message-id - match the message being ACKd
@@ -653,6 +785,11 @@
 --  subscription - the value of the subscriptions id header
 -- Protocol Level 1.2 -
 --  id - matching the ack header of the message being ACKd
+-- Returns:
+--      -1 if protocol is 1.0 and no message-id header is present
+--      -2 if protocol is 1.1 and no message-id header is present
+--      -3 if protocol is 1.1 and no subscription header is present
+--      -4 if protocol is 1.2 and no id header is present
 --
 ::method ack public
     expose wtrq protocol
@@ -676,14 +813,21 @@
 
 --
 -- Stomp NACK
+-- Required Parameters:
+--      nack headers
 -- Required Headers:
 -- Protocol Level 1.0 -
 --  N/A
 -- Protocol Level 1.1 -
---  message-id - match the message being ACKd
+--  message-id - match the message being NACKd
 --  subscription - the value of the subscriptions id header
 -- Protocol Level 1.2 -
---  id - matching the ack header of the message being ACKd
+--  id - matching the ack header of the message being NACKd
+-- Returns:
+--      -1 if protocol is 1.0
+--      -2 if protocol is 1.1 and no message-id header is present
+--      -3 if protocol is 1.1 and no subscription header is present
+--      -4 if protocol is 1.2 and no id header is present
 --
 ::method nack public
     expose wtrq protocol
