@@ -20,10 +20,13 @@ cod = .directory~new
 sc = .connection~new(asock, ch, cod)
 --
 startmsg = 1
-nmsg = 2500
+nmsg = value("STOMP_NMSGS", "", .stc~env)
+if nmsg == .nil then nmsg = 2500
 -- Pattern headers
 sh = .headers~new
-t = .header~new(.stc~HK_DESTINATION, "/queue/rexx.send")
+d = value("STOMP_DEST", "", .stc~env)
+if d == .nil then d = "/queue/rexx.send"
+t = .header~new(.stc~HK_DESTINATION, d)
 sh~add(t)
 t = .header~new(.stc~HK_CONTENT_TYPE, "text/plain; charset=UTF-8")
 sh~add(t)
