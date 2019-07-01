@@ -25,7 +25,7 @@ if nmsg == "" then nmsg = 2500
 -- Pattern headers
 sh = .headers~new
 d = value("STOMP_DEST", "", .stc~env)
-if d == .nil then d = "/queue/rexx.send"
+if d == "" then d = "/queue/rexx.send"
 t = .header~new(.stc~HK_DESTINATION, d)
 sh~add(t)
 t = .header~new(.stc~HK_CONTENT_TYPE, "text/plain; charset=UTF-8")
