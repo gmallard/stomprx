@@ -130,7 +130,9 @@
         -- nxf~pp("In Frame writer After Encode:")
         wfc = wfc + 1
         nfd = nxf~wirestring
-        bw = SockSend(socket, nfd || .string~nl)
+        nfd = nfd || .string~nl
+        -- say "wtr frdump:" wfc "hex:" nfd~c2x
+        bw = SockSend(socket, nfd)
         if wtrdbg then do
             say "frame number" wfc "sent" bw "bytes"
         end
@@ -148,7 +150,7 @@
     -- The reader implementation is a state machine.
     --
     moredata = 0
-    nldrain = 1
+    znldrain = 1
     findeoh = 2
     accumbdy0 = 3
     sendq = 4
@@ -161,7 +163,7 @@
     fcl = .nil
     --
     state = moredata
-    resumest = nldrain
+    resumest = znldrain
     do forever
         select
             --
@@ -179,21 +181,36 @@
                 iterate
             end
             --
-            when state == nldrain then do
-                if rdrdbg then say "READER: state is nldrain"
+            when state == znldrain then do
+                if rdrdbg then say "READER: state is znldrain"
                 if rdrdbg then say "READER: hbb nld" hbb~c2x
-                do while hbb~subchar(1) == .string~nl
+
+                do while hbb~subchar(1) == "00"~x2c
                     if hbb~length == 1 then do
                         hbb = ""
-                        leave
+                        state = moredata
+                        resumest = znldrain
+                        iterate
                     end
                     else hbb = hbb~substr(2)
                 end
+
+                do while hbb~subchar(1) == .string~nl
+                    if hbb~length == 1 then do
+                        hbb = ""
+                        state = moredata
+                        resumest = znldrain
+                        iterate
+                    end
+                    else hbb = hbb~substr(2)
+                end
+
                 if hbb~length == 0 then do
                     state = moredata
-                    resumest = nldrain
+                    resumest = znldrain
                     iterate
                 end
+
                 state = getcmd
                 iterate
             end
@@ -276,11 +293,6 @@
                 if rdrdbg then say "READER: state is sendq"
                 if rdrdbg then say "READER: hbb seq" hbb~c2x
                 --
-                -- say "command:" command
-                -- headers~pp("parsed headers:")
-                -- say "bodyx:" body~c2x body~length()
-                -- leave
-                --
                 nf = .frame~new(command, headers, body)
                 -- nf~pp("READER Frame Dump:")
                 lcldbg = .false
@@ -311,6 +323,13 @@
                                 sent~msgq~append(nf)
                             end
                     end
+                    otherwise do
+                        say "READER: Error, bad frame:"
+                        say "READER: Error, command:" command~c2x
+                        say "READER: Error, headers:" headers~wirestring~c2x
+                        say "READER: Error, body:" body~c2x
+                        exit
+                    end
                 end
                 --
                 command = ""
@@ -318,19 +337,23 @@
                 body = ""
                 fcl = .nil
                 --
-                state = nldrain
+                state = znldrain
                 iterate
             end
             --
             when state == getcmd then do
                 if rdrdbg then say "READER: state is getcmd"
                 if rdrdbg then say "READER: hbb gtc" hbb~c2x
+
+                -- Need more data?
                 if hbb~pos(NL) == 0 then do
                     state = moredata
                     resumest = getcmd
                     iterate
                 end
+
                 parse var hbb command (NL) hbb
+                if rdrdbg then say "READER: command:" command~c2x
                 if hbb == "" then do
                     state = moredata
                     resumest = findeoh
@@ -354,7 +377,9 @@
                             say 'READER: Socket closed:' errno
                         leave
                     end
+                    if rdrdbg then say "READER: ldata:" ldata~length ldata~c2x
                     hbb = hbb || ldata
+                    hbl = hbb~length    -- Update hold back buffer length
                 end
                 --
                 body = hbb~substr(1, fcl)
