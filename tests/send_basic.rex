@@ -21,7 +21,7 @@ sc = .connection~new(asock, ch, cod)
 --
 startmsg = 1
 nmsg = value("STOMP_NMSGS", "", .stc~env)
-if nmsg == .nil then nmsg = 2500
+if nmsg == "" then nmsg = 2500
 -- Pattern headers
 sh = .headers~new
 d = value("STOMP_DEST", "", .stc~env)
@@ -31,7 +31,7 @@ sh~add(t)
 t = .header~new(.stc~HK_CONTENT_TYPE, "text/plain; charset=UTF-8")
 sh~add(t)
 rpart = "12345678901234567890"
-say "send test starts"
+say time("L") "send test starts"
 mc = 0
 do i = startmsg to nmsg
     mc = mc + 1
