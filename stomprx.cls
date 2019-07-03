@@ -18,6 +18,10 @@
 --
 ::class connection public
 --
+-- For Heart Beat Values
+--
+::options digits 18
+--
 -- Attributes
 --
 ::attribute connframe get
@@ -33,7 +37,8 @@
         shutdown NL DNL X00,
         discdbg rdrdbg wtrdbg,
         rdrslt wtrslt,
-        subl atrl
+        subl atrl,
+        chhb srhb hbd
     use strict arg as, ch, od
     socket = as
     --
@@ -53,8 +58,11 @@
     -- say "========================="
     connframe = .frame~fromstring(rcf)
     -- connframe~pp("Connection frame")
-    if connframe~command == ERROR then
-        say "WARNING - ERROR from broker on CONNECT"
+    if connframe~command == ERROR then do
+        say "ERROR from broker on CONNECT !!!"
+        connframe~pp("CONNECT ERROR:")
+        exit
+    end
     else do
         -- say "connect complete"
         -- say "vercon:|" .stc~HK_VERSION "|"
@@ -64,9 +72,15 @@
         session = connframe~hdrs~value(.stc~HK_SESSION)
         server = connframe~hdrs~value(.stc~HK_SERVER)
         -- say "protocol:" protocol
+        --
+        chhb = ch~value(.stc~HK_HEART_BEAT)
+        srhb = connframe~hdrs~value(.stc~HK_HEART_BEAT)
     end
     --
     self~loadopts(od)
+    --
+    hbd~pp("Heart Beat Data:")
+    --
     shutdown = .false
     --
     -- start the reader
@@ -542,7 +556,8 @@
     expose discdbg rdrdbg wtrdbg,
         rdrslt wtrslt,
         wtrq rcptq errq msgq,
-        NL DNL X00 subl atrl
+        NL DNL X00 subl atrl,
+        chhb srhb hbd
     use arg sopt
     --
     ldbg = .false
@@ -610,6 +625,8 @@
     if t <> "" then
         wtrslt = t
     if ldbg then say "wtrslt:" wtrslt
+    --
+    hbd = .hbdata~new(chhb, srhb)
 
 --
 -- Stomp SEND
@@ -883,4 +900,5 @@
 ::requires "strutls.rex"
 ::requires "frame.cls"
 ::requires "subscription.cls"
+::requires "hbdata.cls"
 ::requires "netconn.cls"

@@ -38,6 +38,12 @@ say f~wirestring~c2x
 --
 say
 f~pp("pp of 1.2 frame")
+--
+-- Heartbeat frame create
+--
+hbf = .frame~new(.string~nl, .nil, "")
+say "hbf:" hbf
+
 
 -- fromstring
 ts = "SEND".string~nl
