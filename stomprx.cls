@@ -32,7 +32,7 @@
 -- CTOR
 --
 ::method init public
-    expose edd socket connframe protocol session server,
+    expose socket connframe protocol session server,
         wtrq errq rcptq msgq,
         shutdown NL DNL X00,
         discdbg rdrdbg wtrdbg,
@@ -253,7 +253,7 @@
                 headers = .headers~fromstring(hs)
                 -- headers~pp("Read Headers Before Decode:")
                 -- Always decode, regardless of protocol level
-                headers~decode(edd)
+                headers~decode
                 -- headers~pp("Read Headers After Decode:")
                 if hbb~subchar(1) == X00 then do
                     hbb = hbb~substr(2)
