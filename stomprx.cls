@@ -79,7 +79,7 @@
     --
     self~loadopts(od)
     --
-    hbd~pp("Heart Beat Data:")
+    -- hbd~pp("Heart Beat Data After Init:")
     --
     shutdown = .false
     --
@@ -91,6 +91,8 @@
     self~start("writer", wtrslt)
     call SysSleep 0.2
     -- say time("L") "XDBG done starting writer" wtrslt
+    --
+    if hbd~runw then self~start("hbwtr")
 
 --
 -- STOMP DISCONNECT
@@ -120,7 +122,7 @@
     if discdbg then say time("L") "disconnect close return code:" retc
     
 ::method writer unguarded
-    expose socket wtrq shutdown wtrdbg protocol
+    expose socket wtrq shutdown wtrdbg protocol hbd
     use strict arg wst
     -- say time("L") "XDBG wtr starts" wtrdbg wst
     if wtrdbg then say time("L") "WRITER: starts"
@@ -128,27 +130,41 @@
     wfc = 0
     do forever
         lc = lc + 1 
-        -- say time("L") "writer start next loop" lc
+        -- say time("L") "WRITER: start next loop" lc
         if shutdown then leave
         --
         nxf = wtrq~pull
         if nxf == .nil then do
-            -- say time("L") "writer sleeps"
+            -- say time("L") "WRITER: sleeps"
             call SysSleep wst
             iterate
         end
-        -- nxf~pp("In Frame writer Before Encode:")
-        if protocol <> .stc~SPL_10 then do
-            nxf~hdrs~encode
+        -- say time("L") "WRITER: nxf class" nxf~class
+        if nxf~command == .string~nl then do
+            -- say time("L") "WRITER: will send a heartbeat"
+            -- A heartbeat frame
+            bw = SockSend(socket, nxf~command)
+            -- say time("L") "WRITER: hb write length" bw
         end
-        nxf~pp("In Frame writer After Encode:")
-        wfc = wfc + 1
-        nfd = nxf~wirestring
-        nfd = nfd || .string~nl
-        -- say time("L") "wtr frdump:" wfc "hex:" nfd~c2x
-        bw = SockSend(socket, nfd)
-        if wtrdbg then do
-            say time("L") "WRITER: frame number" wfc "sent" bw "bytes"
+        else do
+            -- Other frames
+            -- nxf~pp("WRITER: In Frame writer Before Encode:")
+            if protocol <> .stc~SPL_10 then do
+                nxf~hdrs~encode
+            end
+            nxf~pp("WRITER: In Frame writer After Encode:")
+            wfc = wfc + 1
+            nfd = nxf~wirestring
+            nfd = nfd || .string~nl
+            -- say time("L") "WRITER: wtr frdump:" wfc "hex:" nfd~c2x
+            bw = SockSend(socket, nfd)
+            if wtrdbg then do
+                say time("L") "WRITER: frame number" wfc "sent" bw "bytes"
+            end
+        end
+        --
+        if hbd~runw then do
+            hbd~lw = time("F")
         end
     end
     --
@@ -156,7 +172,7 @@
 
 ::method reader unguarded
     expose socket shutdown errq rcptq msgq NL DNL X00 rdrdbg,
-        subl protocol
+        subl protocol hbd
     use strict arg rst
     if rdrdbg then say time("L") "READER: reader starts"
     hbb = ""
@@ -890,6 +906,28 @@
     sf = .frame~new(.stc~NACK, h, "")
     tix = wtrq~append(sf)
     return 0
+
+::method hbwtr unguarded
+    expose shutdown hbd wtrq
+    --
+    say time("L") "Heartbeat writer starts"
+    slt = hbd~wsecs * 0.95      -- 5% tolerance
+    do forever
+        if shutdown then leave
+        hbf = .frame~new(.string~nl, .nil, "")
+        wtrq~append(hbf)
+        hbd~wc = hbd~wc + 1
+        --
+        call SysSleep slt
+        -- say time("L") "Heartbeat writer loops"
+    end
+    say time("L") "Heartbeat writer ends"
+
+::method showhbd public
+    expose hbd
+    --
+    hbd~pp("Heart Beat Data Show:")
+
 
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */

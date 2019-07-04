@@ -26,9 +26,10 @@
 ::attribute wms get
 ::attribute rsecs get
 ::attribute wsecs get
+::attribute wc
 
 ::method init public
-    expose runr runw lr lw rms wms rsecs wsecs rfz wfz
+    expose runr runw lr lw rms wms rsecs wsecs wc
     use strict arg cld, srd
     -- Defaults
     runr = .false
@@ -39,9 +40,10 @@
     wms = 0
     rsecs = 0
     wsecs = 0
-    rfz = 0
-    wfz = 0
+    wc = 0
     --
+    if cld == "0,0" then return -- No heartbeating, per client
+    if srd == "0,0" then return -- No heartbeating, per broker
     --
     ca = cld~makeArray(",")
     sa = srd~makeArray(",")
@@ -50,11 +52,9 @@
     cy = ca~at(2)
     sx = sa~at(1)
     sy = sa~at(2)
+    --
     -- say time("L") "cxcy:" cx cy
     -- say time("L") "sxsy:" sx sy
-    --
-    if cld == "0,0" then return -- No heartbeating, per client
-    if srd == "0,0" then return -- No heartbeating, per broker
     --
     if cx <> 0 & sy <> 0 then do
         wms = cx
@@ -76,7 +76,7 @@
 
 
 ::method pp public
-    expose runr runw lr lw rms wms rsecs wsecs rfz wfz
+    expose runr runw lr lw rms wms rsecs wsecs wc
     use strict arg t
     --
     say time("L") t
@@ -87,13 +87,11 @@
     else x = "false"
     say time("L") "Heartbeat Writes:" x
     --
-    say time("L") "Last Read:" lr
-    say time("L") "Last Write:" lw
+    say time("L") "Heartbeat Last Read:" lr
+    say time("L") "Heartbeat Last Write:" lw
     --
-    say time("L") "Read Interval (ms):" rms
-    say time("L") "Write Interval (ms):" wms
-    say time("L") "Read Interval (secs):" rsecs
-    say time("L") "Write Interval (secs):" wsecs
-    say time("L") "Read Fuzz (ms):" rfz
-    say time("L") "Write Fuzz (ms):" wfz
-    
+    say time("L") "Heartbeat Read Interval (ms):" rms
+    say time("L") "Heartbeat Write Interval (ms):" wms
+    say time("L") "Heartbeat Read Interval (secs):" rsecs
+    say time("L") "Heartbeat Write Interval (secs):" wsecs
+    say time("L") "Heartbeat Write Count:" wc
