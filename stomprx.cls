@@ -93,6 +93,7 @@
     -- say time("L") "XDBG done starting writer" wtrslt
     --
     if hbd~runw then self~start("hbwtr")
+    if hbd~runr then self~start("hbrmon")    
 
 --
 -- STOMP DISCONNECT
@@ -206,6 +207,14 @@
                     else say time("L") 'READER: Socket closed:' errno
                     leave
                 end
+                if hbd~runr then hbd~lr = time("F")
+                if ldata == .string~nl then do
+                    -- This seems to be a heartbeat
+                    if rdrdbg then say time("L") 'READER: inbound heartbeat 1'
+                    if hbd~runr then hbd~rc = hbd~rc + 1
+                    state = resumest
+                    iterate
+                end
                 hbb = hbb || ldata
                 state = resumest
                 iterate
@@ -308,8 +317,16 @@
                             say time("L") 'Socket closed:' errno
                         leave
                     end
-                    hbb = hbb || ldata
-                    if ldata~pos(X00) > 0 then found = .true
+                    if hbd~runr then hbd~lr = time("F")
+                    if ldata == .string~nl then do
+                        -- This seems to be a heartbeat
+                        if rdrdbg then say time("L") 'READER: inbound heartbeat 2'
+                        if hbd~runr then hbd~rc = hbd~rc + 1
+                    end
+                    else do
+                        hbb = hbb || ldata
+                        if ldata~pos(X00) > 0 then found = .true
+                    end
                 end
                 --
                 px0 = hbb~pos(X00)
@@ -407,9 +424,17 @@
                             say time("L") 'READER: Socket closed:' errno
                         leave
                     end
-                    if rdrdbg then say time("L") "READER: ldata:" ldata~length ldata~c2x
-                    hbb = hbb || ldata
-                    hbl = hbb~length    -- Update hold back buffer length
+                    if hbd~runr then hbd~lr = time("F")
+                    if ldata == .string~nl then do
+                        -- This seems to be a heartbeat
+                        if rdrdbg then say time("L") 'READER: inbound heartbeat 3'
+                        if hbd~runr then hbd~rc = hbd~rc + 1
+                    end
+                    else do
+                        if rdrdbg then say time("L") "READER: ldata:" ldata~length ldata~c2x
+                        hbb = hbb || ldata
+                        hbl = hbb~length    -- Update hold back buffer length
+                    end
                 end
                 --
                 body = hbb~substr(1, fcl)
@@ -928,6 +953,24 @@
     --
     hbd~pp("Heart Beat Data Show:")
 
+::method hbrmon public unguarded
+    expose shutdown hbd
+    say time("L") "Heartbeat read monitor starts"
+    slt = hbd~rsecs * 1.05      -- 5% tolerance
+    lc = 0
+    do forever
+        if shutdown then leave
+        call SysSleep slt
+        lc = lc + 1
+        tnow = time("F")
+        rdelta = tnow - hbd~lr
+        -- say time("L") "Heartbeat read delta" rdelta hbd~rdmus (hbd~rdmus - rdelta)
+        -- say time("L") "Heartbeat read delta check" rdelta > hbd~rdmus
+        if rdelta > hbd~rdmus & lc > 1 then do
+            say time("L") "Heartbeat reads seem late"
+        end
+    end
+    say time("L") "Heartbeat read monitor ends"
 
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */

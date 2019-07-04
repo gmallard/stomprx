@@ -17,12 +17,12 @@
 asock = .netconn~open(.nil)
 ch = .headers~connhdr12
 --
-ch~setvalue(.stc~HK_HEART_BEAT, "10000,0")
+ch~setvalue(.stc~HK_HEART_BEAT, "0,5000")
 --
 cod = .directory~new
 sc = .connection~new(asock, ch, cod)
 --
-say time("L") "hb_wtrt starts 60 second sleep"
+say time("L") "hb_rdrt starts 60 second sleep"
 call SysSleep 60
 sc~showhbd      -- show heartbeat data
 --

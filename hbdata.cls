@@ -27,9 +27,11 @@
 ::attribute rsecs get
 ::attribute wsecs get
 ::attribute wc
+::attribute rdmus
+::attribute rc
 
 ::method init public
-    expose runr runw lr lw rms wms rsecs wsecs wc
+    expose runr runw lr lw rms wms rsecs wsecs wc rdmus rc
     use strict arg cld, srd
     -- Defaults
     runr = .false
@@ -41,6 +43,8 @@
     rsecs = 0
     wsecs = 0
     wc = 0
+    rdmus = 0
+    rc = 0
     --
     if cld == "0,0" then return -- No heartbeating, per client
     if srd == "0,0" then return -- No heartbeating, per broker
@@ -73,10 +77,12 @@
     --
     rfz = (rms * 15) / 100
     wfz = (wms * 15) / 100
+    --
+    rdmus = 1000 * rms
 
 
 ::method pp public
-    expose runr runw lr lw rms wms rsecs wsecs wc
+    expose runr runw lr lw rms wms rsecs wsecs wc rdmus rc
     use strict arg t
     --
     say time("L") t
@@ -95,3 +101,5 @@
     say time("L") "Heartbeat Read Interval (secs):" rsecs
     say time("L") "Heartbeat Write Interval (secs):" wsecs
     say time("L") "Heartbeat Write Count:" wc
+    say time("L") "Heartbeat Read Interval (microseconds):" rdmus
+    say time("L") "Heartbeat Read Count:" rc
