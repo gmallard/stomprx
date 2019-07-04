@@ -44,34 +44,34 @@
     --
     cf = .frame~new(.stc~CONNECT, ch, "")
     -- cf~pp("Connect Frame:")
-    -- say "raw data:"
-    -- say cf~wirestring~c2x
+    -- say time("L") "raw data:"
+    -- say time("L") cf~wirestring~c2x
     -- Write the CONNECT frame
     bw = SockSend(socket, cf~wirestring || .string~nl)
-    -- say "Bytes written:" bw    
+    -- say time("L") "Bytes written:" bw    
     call SysSleep(0.1)
     retc = SockRecv(socket, 'rcf', 2048)
-    -- say "Return Code:" retc
-    -- say "Len Received:" rcf~length
-    -- say "Data Received:"
-    -- say rcf
-    -- say "========================="
+    -- say time("L") "Return Code:" retc
+    -- say time("L") "Len Received:" rcf~length
+    -- say time("L") "Data Received:"
+    -- say time("L") rcf
+    -- say time("L") "========================="
     connframe = .frame~fromstring(rcf)
     -- connframe~pp("Connection frame")
     if connframe~command == ERROR then do
-        say "ERROR from broker on CONNECT !!!"
+        say time("L") "ERROR from broker on CONNECT !!!"
         connframe~pp("CONNECT ERROR:")
         exit
     end
     else do
-        -- say "connect complete"
-        -- say "vercon:|" .stc~HK_VERSION "|"
+        -- say time("L") "connect complete"
+        -- say time("L") "vercon:|" .stc~HK_VERSION "|"
         -- ch = connframe~hdrs
         -- ch~pp("CONNECT Frame Headers:")
         protocol = connframe~hdrs~value(.stc~HK_VERSION)
         session = connframe~hdrs~value(.stc~HK_SESSION)
         server = connframe~hdrs~value(.stc~HK_SERVER)
-        -- say "protocol:" protocol
+        -- say time("L") "protocol:" protocol
         --
         chhb = ch~value(.stc~HK_HEART_BEAT)
         srhb = connframe~hdrs~value(.stc~HK_HEART_BEAT)
@@ -87,10 +87,10 @@
     self~start("reader", rdrslt)
     call SysSleep 0.2
     -- start the writer
-    -- say "XDBG starting writer" wtrslt
+    -- say time("L") "XDBG starting writer" wtrslt
     self~start("writer", wtrslt)
     call SysSleep 0.2
-    -- say "XDBG done starting writer" wtrslt
+    -- say time("L") "XDBG done starting writer" wtrslt
 
 --
 -- STOMP DISCONNECT
@@ -117,23 +117,23 @@
     shutdown = .true
     --
     retc = SockClose(socket)
-    if discdbg then say "disconnect close return code:" retc
+    if discdbg then say time("L") "disconnect close return code:" retc
     
 ::method writer unguarded
     expose socket wtrq shutdown wtrdbg protocol
     use strict arg wst
-    -- say "XDBG wtr starts" wtrdbg wst
-    if wtrdbg then say "writer starts"
+    -- say time("L") "XDBG wtr starts" wtrdbg wst
+    if wtrdbg then say time("L") "WRITER: starts"
     lc = 0
     wfc = 0
     do forever
         lc = lc + 1 
-        -- say "writer start next loop" lc
+        -- say time("L") "writer start next loop" lc
         if shutdown then leave
         --
         nxf = wtrq~pull
         if nxf == .nil then do
-            -- say "writer sleeps"
+            -- say time("L") "writer sleeps"
             call SysSleep wst
             iterate
         end
@@ -141,24 +141,24 @@
         if protocol <> .stc~SPL_10 then do
             nxf~hdrs~encode
         end
-        -- nxf~pp("In Frame writer After Encode:")
+        nxf~pp("In Frame writer After Encode:")
         wfc = wfc + 1
         nfd = nxf~wirestring
         nfd = nfd || .string~nl
-        -- say "wtr frdump:" wfc "hex:" nfd~c2x
+        -- say time("L") "wtr frdump:" wfc "hex:" nfd~c2x
         bw = SockSend(socket, nfd)
         if wtrdbg then do
-            say "frame number" wfc "sent" bw "bytes"
+            say time("L") "WRITER: frame number" wfc "sent" bw "bytes"
         end
     end
     --
-    if wtrdbg then say "writer ends"
+    if wtrdbg then say time("L") "WRITER: writer ends"
 
 ::method reader unguarded
     expose socket shutdown errq rcptq msgq NL DNL X00 rdrdbg,
         subl protocol
     use strict arg rst
-    if rdrdbg then say "READER: reader starts"
+    if rdrdbg then say time("L") "READER: reader starts"
     hbb = ""
     --
     -- The reader implementation is a state machine.
@@ -182,12 +182,12 @@
         select
             --
             when state == moredata then do
-                if rdrdbg then say "READER: state is moredata"
-                if rdrdbg then say "READER: hbb md" hbb~c2x
+                if rdrdbg then say time("L") "READER: state is moredata"
+                if rdrdbg then say time("L") "READER: hbb md" hbb~c2x
                 ret = SockRecv(socket, 'ldata', 1024)
                 if ret < 1 then do
-                    if ret < 0 then say 'READER: SockRecv failed:' errno
-                    else say 'READER: Socket closed:' errno
+                    if ret < 0 then say time("L") 'READER: SockRecv failed:' errno
+                    else say time("L") 'READER: Socket closed:' errno
                     leave
                 end
                 hbb = hbb || ldata
@@ -196,8 +196,8 @@
             end
             --
             when state == znldrain then do
-                if rdrdbg then say "READER: state is znldrain"
-                if rdrdbg then say "READER: hbb nld" hbb~c2x
+                if rdrdbg then say time("L") "READER: state is znldrain"
+                if rdrdbg then say time("L") "READER: hbb nld" hbb~c2x
 
                 do while hbb~subchar(1) == "00"~x2c
                     if hbb~length == 1 then do
@@ -230,8 +230,8 @@
             end
             --
             when state == findeoh then do
-                if rdrdbg then say "READER: state is findeoh"
-                if rdrdbg then say "READER: hbb feoh" hbb~c2x
+                if rdrdbg then say time("L") "READER: state is findeoh"
+                if rdrdbg then say time("L") "READER: hbb feoh" hbb~c2x
                 if hbb~subchar(1) == NL then do
                     headers = .headers~new
                     hbb = hbb~substr(2)
@@ -273,7 +273,7 @@
             end
             --
             when state == accumbdy0 then do
-                if rdrdbg then say "READER: state is accumbdy0"
+                if rdrdbg then say time("L") "READER: state is accumbdy0"
                 px0 = hbb~pos(X00)
                 if px0 > 0 then do
                     body = hbb~substr(1,px0-1)
@@ -287,13 +287,13 @@
                     ret = SockRecv(socket, 'ldata', 1024)
                     if ret < 1 then do
                         if ret < 0 then
-                            say 'SockRecv failed:' errno
+                            say time("L") 'SockRecv failed:' errno
                         else
-                            say 'Socket closed:' errno
+                            say time("L") 'Socket closed:' errno
                         leave
                     end
                     hbb = hbb || ldata
-                    if ldata~pos(.stc~X00) > 0 then found = .true
+                    if ldata~pos(X00) > 0 then found = .true
                 end
                 --
                 px0 = hbb~pos(X00)
@@ -304,44 +304,44 @@
             end
             --
             when state == sendq then do
-                if rdrdbg then say "READER: state is sendq"
-                if rdrdbg then say "READER: hbb seq" hbb~c2x
+                if rdrdbg then say time("L") "READER: state is sendq"
+                if rdrdbg then say time("L") "READER: hbb seq" hbb~c2x
                 --
                 nf = .frame~new(command, headers, body)
                 -- nf~pp("READER Frame Dump:")
                 lcldbg = .false
                 select
                     when command == .stc~ERROR then do
-                        if lcldbg then say "READER: append errq"
+                        if lcldbg then say time("L") "READER: append errq"
                         errq~append(nf)
                     end
                     when command == .stc~RECEIPT then do
-                        if lcldbg then say "READER: append rcptq"
+                        if lcldbg then say time("L") "READER: append rcptq"
                         rcptq~append(nf)
                     end
                     when command == .stc~MESSAGE then do
-                        if lcldbg then say "READER: have MESSAGE"
+                        if lcldbg then say time("L") "READER: have MESSAGE"
                         msub = headers~value(.stc~HK_SUBSCRIPTION)
                         sent = subl~at(msub)
                         if sent == .nil then do
-                            if lcldbg then say "READER: append msgq 1"
+                            if lcldbg then say time("L") "READER: append msgq 1"
                             msgq~append(nf)
                         end
                         else
                             if sent~msgq == .nil then do
-                                if lcldbg then say "READER: append msgq 2"
+                                if lcldbg then say time("L") "READER: append msgq 2"
                                 msgq~append(nf)
                             end
                             else do
-                                if lcldbg then say "READER: append sent~msgq"
+                                if lcldbg then say time("L") "READER: append sent~msgq"
                                 sent~msgq~append(nf)
                             end
                     end
                     otherwise do
-                        say "READER: Error, bad frame:"
-                        say "READER: Error, command:" command~c2x
-                        say "READER: Error, headers:" headers~wirestring~c2x
-                        say "READER: Error, body:" body~c2x
+                        say time("L") "READER: Error, bad frame:"
+                        say time("L") "READER: Error, command:" command~c2x
+                        say time("L") "READER: Error, headers:" headers~wirestring~c2x
+                        say time("L") "READER: Error, body:" body~c2x
                         exit
                     end
                 end
@@ -356,8 +356,8 @@
             end
             --
             when state == getcmd then do
-                if rdrdbg then say "READER: state is getcmd"
-                if rdrdbg then say "READER: hbb gtc" hbb~c2x
+                if rdrdbg then say time("L") "READER: state is getcmd"
+                if rdrdbg then say time("L") "READER: hbb gtc" hbb~c2x
 
                 -- Need more data?
                 if hbb~pos(NL) == 0 then do
@@ -367,7 +367,7 @@
                 end
 
                 parse var hbb command (NL) hbb
-                if rdrdbg then say "READER: command:" command~c2x
+                if rdrdbg then say time("L") "READER: command:" command~c2x "|" || command || "|"
                 if hbb == "" then do
                     state = moredata
                     resumest = findeoh
@@ -378,20 +378,20 @@
             end
             --
             when state == accumbdyl then do
-                if rdrdbg then say "READER: state is accumbdyl"
-                if rdrdbg then say "READER: hbb accl" hbb~c2x
+                if rdrdbg then say time("L") "READER: state is accumbdyl"
+                if rdrdbg then say time("L") "READER: hbb accl" hbb~c2x
                 hbl = hbb~length
-                if rdrdbg then say "READER: lens hbl" hbl "fcl" fcl
+                if rdrdbg then say time("L") "READER: lens hbl" hbl "fcl" fcl
                 do while hbl < fcl
                     ret = SockRecv(socket, 'ldata', 1024)
                     if ret < 1 then do
                         if ret < 0 then
-                            say 'READER: SockRecv failed:' errno
+                            say time("L") 'READER: SockRecv failed:' errno
                         else
-                            say 'READER: Socket closed:' errno
+                            say time("L") 'READER: Socket closed:' errno
                         leave
                     end
-                    if rdrdbg then say "READER: ldata:" ldata~length ldata~c2x
+                    if rdrdbg then say time("L") "READER: ldata:" ldata~length ldata~c2x
                     hbb = hbb || ldata
                     hbl = hbb~length    -- Update hold back buffer length
                 end
@@ -406,7 +406,7 @@
         if shutdown then leave
     end -- forever do
     --
-    if rdrdbg then say "READER: reader ends"
+    if rdrdbg then say time("L") "READER: reader ends"
 
 --
 -- Public Method recverr
@@ -584,7 +584,7 @@
     t = value("STOMPRX_DISCDBG", "", .stc~env)
     if t <> "" then
         discdbg = .true
-    if ldbg then say "discdbg:" discdbg
+    if ldbg then say time("L") "discdbg:" discdbg
     --
     rdrdbg = .false
     if ho then do
@@ -594,7 +594,7 @@
     t = value("STOMPRX_RDRDBG", "", .stc~env)
     if t <> "" then
         rdrdbg = .true
-    if ldbg then say "rdrdbg:" rdrdbg
+    if ldbg then say time("L") "rdrdbg:" rdrdbg
     --
     wtrdbg = .false
     if ho then do
@@ -604,7 +604,7 @@
     t = value("STOMPRX_WTRDBG", "", .stc~env)
     if t <> "" then
         wtrdbg = .true
-    if ldbg then say "wtrdbg:" wtrdbg
+    if ldbg then say time("L") "wtrdbg:" wtrdbg
     --
     rdrslt = 0.2
     if ho then do
@@ -614,7 +614,7 @@
     t = value("STOMPRX_RDRSLT", "", .stc~env)
     if t <> "" then
         rdrslt = t
-    if ldbg then say "rdrslt:" rdrslt
+    if ldbg then say time("L") "rdrslt:" rdrslt
     --
     wtrslt = 0.2
     if ho then do
@@ -624,7 +624,7 @@
     t = value("STOMPRX_WTRSLT", "", .stc~env)
     if t <> "" then
         wtrslt = t
-    if ldbg then say "wtrslt:" wtrslt
+    if ldbg then say time("L") "wtrslt:" wtrslt
     --
     hbd = .hbdata~new(chhb, srhb)
 
@@ -645,7 +645,7 @@
     sf = .frame~new(.stc~SEND, h, b)
     -- h~pp("In SEND. headers:")
     tix = wtrq~append(sf)
-    -- say "send tix:" tix
+    -- say time("L") "send tix:" tix
     return 0
 
 --
@@ -689,17 +689,17 @@
         end
     end
     --
-    -- say "lid" lid lid~class
+    -- say time("L") "lid" lid lid~class
 
     if ocbq == "OCBQ" then do
         nsub = .subscription~new(sh)
         subl~put(nsub, lid)
-        -- say "No OCBQ, lid:" lid
+        -- say time("L") "No OCBQ, lid:" lid
     end
     else do
         nsub = .subscription~new(sh, ocbq)
         subl~put(nsub, lid)
-        -- say "Have OCBQ, lid:" lid
+        -- say time("L") "Have OCBQ, lid:" lid
     end
     sf = .frame~new(.stc~SUBSCRIBE, sh, "")
     tix = wtrq~append(sf)

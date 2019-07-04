@@ -57,12 +57,12 @@
     host.!addr = ahost
     host.!port = aport
 
-    -- say "host:" ahost
-    -- say "port:" aport
+    -- say time("L") "host:" ahost
+    -- say time("L") "port:" aport
 
     /*  connect to the server  */
     if SockConnect(socket, 'host.!') < 0 then do
-        say 'SockConnect failed:' errno
+        say time("L") 'SockConnect failed:' errno
         return .nil
     end
     --

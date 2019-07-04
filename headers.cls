@@ -74,7 +74,7 @@
     do ln over ls~allItems
         parse var ln k ":" v
         hdr = .header~new(k, v)
-        if \h~add(hdr) then say "WARNING not a header"
+        if \h~add(hdr) then say time("L") "WARNING not a header"
     end
     return h
 
@@ -137,11 +137,11 @@
 ::method pp public
     expose hl
     use strict arg t
-    say t
+    say time("L") t
     --
-    say "Header count:" hl~items
+    say time("L") "Header count:" hl~items
     do hn over hl~allItems()
-        say "Key->"hn~key", Value->"hn~value
+        say time("L") "Key->"hn~key", Value->"hn~value
     end
 
 --
@@ -165,7 +165,8 @@
     expose hl
     nhd = .headers~new
     do hn over hl~allItems
-        nhd~add(hn)
+        nuh = hn~clone
+        nhd~add(nuh)
     end
     return nhd
 
@@ -241,7 +242,7 @@
 ::method pp public
     expose edl
     use strict arg t
-    say t
+    say time("L") t
     --
     do ne over edl~allItems
         ne~pp("Next E/D Pair:")
@@ -287,8 +288,8 @@
 ::method pp public
     expose encoded decoded
     use strict arg t
-    say t
-    say "Encoded->"encoded", Decoded->"decoded
+    say time("L") t
+    say time("L") "Encoded->"encoded", Decoded->"decoded
 
 ::requires "stc.cls"
 ::requires "header.cls"

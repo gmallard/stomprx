@@ -61,15 +61,15 @@
     expose command hdrs body
     use strict arg t
     --
-    say t
-    say "Command:"
-    if command == "" then say "(empty)"
-    else say command
+    say time("L") t
+    say time("L") "Command:"
+    if command == "" then say time("L") "(empty)"
+    else say time("L") command
     --
-    hdrs~pp("Headers:")
+    hdrs~pp("Headers PP From Frame:")
     --
-    say "Body:"
-    if body == "" then say "(empty)"
-    else say body
+    say time("L") "Body:"
+    if body == "" then say time("L") "(empty)"
+    else say time("L") body
 
 ::requires "headers.cls"
