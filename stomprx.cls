@@ -972,6 +972,19 @@
     end
     say time("L") "Heartbeat read monitor ends"
 
+::method version public class
+    major = "1"
+    minor = "0"
+    patch = "0"
+    mod = ""
+    --
+    -- Maybe e.g.:
+    -- mod = "PLVL001"
+    --
+    v = major"."minor"."patch
+    if mod <> "" then v = v || " "mod
+    return v
+
 ::requires 'rxsock' LIBRARY
 /* Watch this.  Order is important. */
 ::requires "uuid.cls"
