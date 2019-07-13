@@ -17,7 +17,7 @@
 asock = .netconn~open(.nil)
 ch = .headers~connhdr10
 cod = .directory~new
-sc = .connection~new(asock, ch, cod)
+sc = .stomprxconn~new(asock, ch, cod)
 --
 startmsg = 1
 nmsg = value("STOMP_NMSGS", "", .stc~env)

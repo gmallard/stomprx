@@ -22,7 +22,7 @@ ch = .headers~connhdr12
 ch~setvalue(.stc~HK_HEART_BEAT, "9000,0")
 --
 cod = .directory~new
-sc = .connection~new(asock, ch, cod)
+sc = .stomprxconn~new(asock, ch, cod)
 --
 sc~disconnect
 --

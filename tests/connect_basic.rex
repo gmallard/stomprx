@@ -27,7 +27,7 @@ exit
     asock = .netconn~open(.nil)
     ch = .headers~connhdr10
     cod = .directory~new
-    sc = .connection~new(asock, ch, cod)
+    sc = .stomprxconn~new(asock, ch, cod)
     say  time("L") "newconn complete"
     say  time("L") "session:" sc~session
     say  time("L") "server:" sc~server
@@ -54,7 +54,7 @@ exit
     asock = .netconn~open(.nil)
     ch = .headers~connhdr11
     cod = .directory~new
-    sc = .connection~new(asock, ch, cod)
+    sc = .stomprxconn~new(asock, ch, cod)
     say  time("L") "newconn complete"
     say  time("L") "session:" sc~session
     say  time("L") "server:" sc~server
@@ -81,7 +81,7 @@ exit
     asock = .netconn~open(.nil)
     ch = .headers~connhdr12
     cod = .directory~new
-    sc = .connection~new(asock, ch, cod)
+    sc = .stomprxconn~new(asock, ch, cod)
     say  time("L") "newconn complete"
     say  time("L") "session:" sc~session
     say  time("L") "server:" sc~server

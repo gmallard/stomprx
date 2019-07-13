@@ -20,7 +20,7 @@ ch = .headers~connhdr12
 ch~setvalue(.stc~HK_HEART_BEAT, "10000,5000")
 --
 cod = .directory~new
-sc = .connection~new(asock, ch, cod)
+sc = .stomprxconn~new(asock, ch, cod)
 --
 say time("L") "hb_bothrw starts 60 second sleep"
 call SysSleep 60

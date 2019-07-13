@@ -24,7 +24,7 @@ exit
     asock = .netconn~open(.nil)
     ch = .headers~connhdr12
     cod = .directory~new
-    sc = .connection~new(asock, ch, cod)
+    sc = .stomprxconn~new(asock, ch, cod)
     say "newconn complete" time("L")
     say "session:" sc~session time("L")
     say "server:" sc~server time("L")

@@ -14,7 +14,7 @@
  limitations under the License.
 */
 
-say "stomprx Version:" .connection~version
+say "stomprx Version:" .stomprxconn~version
 
 exit
 
