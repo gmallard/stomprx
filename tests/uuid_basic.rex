@@ -19,4 +19,4 @@ end
 
 exit
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

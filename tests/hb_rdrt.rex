@@ -20,7 +20,7 @@ ch = .headers~connhdr12
 ch~setvalue(.stc~HK_HEART_BEAT, "0,5000")
 --
 cod = .directory~new
-sc = .connection~new(asock, ch, cod)
+sc = .stomprxconn~new(asock, ch, cod)
 --
 say time("L") "hb_rdrt starts 60 second sleep"
 call SysSleep 60
@@ -28,4 +28,4 @@ sc~showhbd      -- show heartbeat data
 --
 sc~disconnect
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

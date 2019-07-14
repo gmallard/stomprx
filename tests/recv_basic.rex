@@ -27,7 +27,7 @@ exit
     asock = .netconn~open(.nil)
     ch = .headers~connhdr10
     cod = .directory~new
-    sc = .connection~new(asock, ch, cod)
+    sc = .stomprxconn~new(asock, ch, cod)
     say "newconn complete" time("L")
     say "session:" sc~session
     say "server:" sc~server
@@ -81,7 +81,7 @@ exit
     asock = .netconn~open(.nil)
     ch = .headers~connhdr10
     cod = .directory~new
-    sc = .connection~new(asock, ch, cod)
+    sc = .stomprxconn~new(asock, ch, cod)
     say "newconn complete" time("L")
     say "session:" sc~session
     say "server:" sc~server
@@ -133,7 +133,7 @@ exit
     asock = .netconn~open(.nil)
     ch = .headers~connhdr11
     cod = .directory~new
-    sc = .connection~new(asock, ch, cod)
+    sc = .stomprxconn~new(asock, ch, cod)
     say "newconn complete" time("L")
     say "session:" sc~session
     say "server:" sc~server
@@ -187,7 +187,7 @@ exit
     asock = .netconn~open(.nil)
     ch = .headers~connhdr12
     cod = .directory~new
-    sc = .connection~new(asock, ch, cod)
+    sc = .stomprxconn~new(asock, ch, cod)
     say "newconn complete" time("L")
     say "session:" sc~session
     say "server:" sc~server
@@ -237,4 +237,4 @@ exit
     return 0
 
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

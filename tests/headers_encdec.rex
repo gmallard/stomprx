@@ -88,4 +88,4 @@
     hl~decode
     hl~pp("hedmix test after decode:")
 
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

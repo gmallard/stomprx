@@ -14,10 +14,10 @@
  limitations under the License.
 */
 
-say "stomprx Version:" .connection~version
+say "stomprx Version:" .stomprxconn~version
 
 exit
 
 -- /////////////////////////////////////////////////////////////////////////////
 
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

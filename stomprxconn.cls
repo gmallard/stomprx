@@ -16,7 +16,7 @@
 --
 -- Stomp Connection
 --
-::class connection public
+::class stomprxconn public
 --
 -- For Heart Beat Values
 --

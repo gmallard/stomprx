@@ -25,4 +25,4 @@ exit
     rv = .strutls~isFile(f)
     say "rv is:" rv
 
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"
