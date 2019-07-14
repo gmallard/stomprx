@@ -11,8 +11,8 @@ protocol see:
 
 In this directory review the files:
 
-* [Programmer Reference](programmer-reference.md)
-* [API Reference](api-reference.md)
+* [Programmer Reference](https://github.com/gmallard/stomprx/blob/master/programmer-reference.md)
+* [API Reference](https://github.com/gmallard/stomprx/blob/master/api-reference.md)
 
 ## TODO
 
