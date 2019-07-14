@@ -104,4 +104,4 @@ exit
     say  time("L") "disconnect done"
 
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

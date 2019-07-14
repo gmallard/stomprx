@@ -203,4 +203,4 @@ exit
     else sc~disconnect
     say "disconnect done" time("L")
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

@@ -67,4 +67,4 @@ rf~pp("RECEIPT Frame:")
 
 say "send test done"
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

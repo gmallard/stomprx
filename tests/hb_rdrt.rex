@@ -28,4 +28,4 @@ sc~showhbd      -- show heartbeat data
 --
 sc~disconnect
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

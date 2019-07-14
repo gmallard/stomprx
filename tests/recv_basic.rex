@@ -237,4 +237,4 @@ exit
     return 0
 
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

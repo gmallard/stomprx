@@ -69,4 +69,4 @@ ffs~pp("Test From String No Body:")
 say;say "bye"
 exit
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

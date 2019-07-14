@@ -31,4 +31,4 @@ h2bcl = h2b~clone
 say "Compare B to clone:" h2b~equals(h2bcl)
 say "Compare C to clone:" h2c~equals(h2bcl)
 
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"

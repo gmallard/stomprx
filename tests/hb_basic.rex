@@ -26,4 +26,4 @@ sc = .stomprxconn~new(asock, ch, cod)
 --
 sc~disconnect
 --
-::requires "../stomprx.cls"
+::requires "../stomprxconn.cls"
